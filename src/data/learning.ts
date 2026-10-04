@@ -56,14 +56,14 @@ export const LEARNING: LearningItem[] = [
     title: 'Large Language Models explained briefly',
     kind: 'Video',
     by: '3Blue1Brown on YouTube',
-    // url: 'Paste the video address here to link it.',
+    url: 'https://www.youtube.com/watch?v=LPZh9BOjkQs',
     status: 'next',
   },
   {
     title: 'Large Language Models Explained! How LLMs Work for Beginners',
     kind: 'Video',
-    by: 'The Data and AI Guy',
-    // url: 'Paste the video address here to link it.',
+    by: 'The Data and AI Guy on YouTube',
+    url: 'https://www.youtube.com/watch?v=RhPKBmeYNuI',
     status: 'next',
   },
 ];
