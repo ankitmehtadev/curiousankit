@@ -7,9 +7,7 @@ question: 'Can I run a website the way I run a business analysis project, with A
 outcome: 'Worked'
 tools: ['Claude', 'Astro', 'Cloudflare', 'GitHub']
 tags: ['Business analysis', 'Building with AI', 'This site']
-startHere: true
-startOrder: 2
-startReason: "The clearest example of how I work with AI, from the brief to the mistakes."
+startHere: false
 ---
 
 The question behind this experiment was simple. Could I run a website the way I run a project at work, with a brief, options to react to, a specification, a build, testing and a release, and let AI do the delivery? You are reading the answer.

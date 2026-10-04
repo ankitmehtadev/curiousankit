@@ -1,0 +1,114 @@
+---
+import Subscribe from '../components/Subscribe.astro';
+import Base from '../layouts/Base.astro';
+import { SITE_TITLE } from '../consts';
+
+const feed = new URL('/rss.xml', Astro.site).href;
+const intro = 'New notes, experiments and learning entries, delivered when they are published.';
+---
+
+<Base title={`Subscribe | ${SITE_TITLE}`} description={intro}>
+  <section class="wrap page">
+    <h1>Subscribe</h1>
+    <p class="intro">{intro}</p>
+
+    <section class="block" aria-labelledby="rss-title">
+      <h2 id="rss-title">RSS</h2>
+      <p>
+        RSS is a plain, ad free way to follow a website. Paste this address into a feed reader, such
+        as Feedly, Inoreader or NetNewsWire, and new posts arrive there by themselves. There is no
+        account to make with me and nothing to sign up for.
+      </p>
+      <div class="address">
+        <code id="feed">{feed}</code>
+        <button type="button" id="copy" class="btn">Copy address</button>
+      </div>
+      <p class="small">
+        Curious what it looks like? <a href="/rss.xml">Open the feed</a>. It is plain text, written for
+        feed readers rather than people.
+      </p>
+    </section>
+  </section>
+
+  <Subscribe />
+</Base>
+
+<script>
+  const button = document.getElementById('copy') as HTMLButtonElement | null;
+  const feed = document.getElementById('feed');
+  let timer: number | undefined;
+
+  button?.addEventListener('click', async () => {
+    const text = feed?.textContent ?? '';
+    let label = 'Copied';
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // Clipboard blocked: select the address so it can be copied by hand.
+      if (feed) {
+        const range = document.createRange();
+        range.selectNodeContents(feed);
+        const selection = window.getSelection();
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+      }
+      label = 'Selected, now copy it';
+    }
+    button.textContent = label;
+    window.clearTimeout(timer);
+    timer = window.setTimeout(() => {
+      button.textContent = 'Copy address';
+    }, 2200);
+  });
+</script>
+
+<style>
+  .page {
+    padding-top: 4rem;
+  }
+  h1 {
+    margin-bottom: 0.4em;
+    font-size: clamp(2.4rem, 5vw, 3.5rem);
+  }
+  .intro {
+    max-width: 34rem;
+    margin: 0 0 3rem;
+    color: var(--muted);
+  }
+  .block {
+    max-width: 40rem;
+  }
+  h2 {
+    margin: 0 0 0.8rem;
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--ink);
+    font-size: 2rem;
+  }
+  .address {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 0.6rem;
+    margin: 1.4rem 0 1rem;
+  }
+  code {
+    flex: 1 1 18rem;
+    min-width: 0;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid var(--rule);
+    background: var(--band);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: var(--ink);
+    overflow-wrap: anywhere;
+  }
+  .address .btn {
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .small {
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+</style>

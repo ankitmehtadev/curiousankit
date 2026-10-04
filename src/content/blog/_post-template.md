@@ -3,7 +3,7 @@
 # 1. Copy it, rename it (for example my-first-experiment.md) and remove the underscore.
 # 2. category must be Notes, Experiments or Learning.
 # 3. startHere: true puts the post on the Start here page. Add startReason (one line shown there)
-#    and startOrder (1, 2, 3 ...). Keep that page to about four posts.
+#    and startOrder (1, 2, 3 ...). The page holds five posts at most.
 # 4. For an Experiment, also set question, outcome and tools (see the lines at the end of this block).
 #    outcome is one of: Worked, Mixed, Did not work, In progress. They feed the Experiments page.
 # Files whose names begin with an underscore are never published.

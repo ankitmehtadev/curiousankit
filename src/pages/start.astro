@@ -9,13 +9,15 @@ import { categoryUrl, formatDate, noteUrl, sortNotes } from '../utils';
 const all = sortNotes(await getCollection('blog'));
 
 // The reading path: only posts marked startHere, in the order you set (oldest first when no order is given).
+// The page holds five at most.
 const picks = all
   .filter((n) => n.data.startHere)
   .sort(
     (a, b) =>
       (a.data.startOrder ?? 99) - (b.data.startOrder ?? 99) ||
       a.data.pubDate.valueOf() - b.data.pubDate.valueOf(),
-  );
+  )
+  .slice(0, 5);
 
 // Signposts to the three sections. A section links through only once it has something in it.
 const sections = [
