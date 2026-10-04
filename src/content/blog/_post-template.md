@@ -3,6 +3,8 @@
 # 1. Copy it, rename it (for example my-first-experiment.md) and remove the underscore.
 # 2. category must be Notes, Experiments or Learning.
 # 3. startHere: true adds the note to the Start here page.
+# 4. For an Experiment, also set question, outcome and tools (see the lines at the end of this block).
+#    outcome is one of: Worked, Mixed, Did not work, In progress. They feed the Experiments page.
 # Files whose names begin with an underscore are never published.
 title: 'Post title'
 description: 'One sentence that works as the subtitle under the title and as the excerpt in lists.'
@@ -10,6 +12,9 @@ pubDate: 'Oct 04 2026'
 category: 'Notes'
 tags: ['Prompting', 'Business analysis']
 startHere: false
+# question: 'The one question this experiment asks?'
+# outcome: 'Worked'
+# tools: ['Claude', 'Astro']
 ---
 
 Start with a plain paragraph. The first letter becomes a large drop cap automatically.

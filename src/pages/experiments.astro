@@ -1,9 +1,241 @@
 ---
 import { getCollection } from 'astro:content';
-import ListPage from '../layouts/ListPage.astro';
-import { sortNotes } from '../utils';
+import OutcomeMark from '../components/OutcomeMark.astro';
+import Base from '../layouts/Base.astro';
+import { SITE_TITLE } from '../consts';
+import { formatDate, noteUrl, sortNotes } from '../utils';
 
-const notes = sortNotes(await getCollection('blog')).filter((n) => n.data.category === 'Experiments');
+const experiments = sortNotes(await getCollection('blog')).filter((n) => n.data.category === 'Experiments');
+
+const OUTCOMES = ['Worked', 'Mixed', 'Did not work', 'In progress'] as const;
+const counts = OUTCOMES.map((outcome) => ({
+  outcome,
+  count: experiments.filter((e) => e.data.outcome === outcome).length,
+}));
+
+const intro = 'Things I built and tried, each written up as a question and a result.';
 ---
 
-<ListPage title="Experiments" intro="Things I built and tried, including what went wrong." notes={notes} empty="The first experiment is on its way." />
+<Base title={`Experiments | ${SITE_TITLE}`} description={intro}>
+  <section class="wrap lab">
+    <aside class="intro">
+      <h1>Experiments</h1>
+      <p class="lede">{intro}</p>
+      <p class="total">{experiments.length} {experiments.length === 1 ? 'experiment' : 'experiments'}</p>
+      <ul class="key" aria-label="Result key">
+        {
+          counts.map(({ outcome, count }) => (
+            <li>
+              <OutcomeMark outcome={outcome} />
+              <span class="count">{count}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </aside>
+
+    <div class="sheets">
+      {
+        experiments.length === 0 && <p class="empty">The first experiment is on its way.</p>
+      }
+      {
+        experiments.map((e) => (
+          <article class="sheet">
+            <h2><a href={noteUrl(e)}>{e.data.title}</a></h2>
+            <div class="question">
+              <p class="label">The question</p>
+              <p class="text">{e.data.question ?? e.data.description}</p>
+            </div>
+            <dl class:list={{ sparse: !e.data.outcome && e.data.tools.length === 0 }}>
+              {
+                e.data.outcome && (
+                  <div class="result">
+                    <dt>Result</dt>
+                    <dd><OutcomeMark outcome={e.data.outcome} /></dd>
+                  </div>
+                )
+              }
+              {
+                e.data.tools.length > 0 && (
+                  <div class="tools">
+                    <dt>Tools</dt>
+                    <dd>{e.data.tools.join(', ')}</dd>
+                  </div>
+                )
+              }
+              <div class="when">
+                <dt>Date</dt>
+                <dd><time datetime={e.data.pubDate.toISOString()}>{formatDate(e.data.pubDate)}</time></dd>
+              </div>
+            </dl>
+            <p class="read"><a href={noteUrl(e)}>Read the write up</a></p>
+          </article>
+        ))
+      }
+    </div>
+  </section>
+</Base>
+
+<style>
+  .lab {
+    display: grid;
+    grid-template-columns: minmax(0, 18rem) minmax(0, 1fr);
+    column-gap: 5rem;
+    align-items: start;
+    padding-top: 4rem;
+  }
+
+  /* The left column stays in view while the sheets scroll past. */
+  .intro {
+    position: sticky;
+    top: 2rem;
+  }
+  h1 {
+    margin-bottom: 0.4em;
+    font-size: clamp(2.2rem, 4vw, 2.9rem);
+    overflow-wrap: normal;
+    word-break: keep-all;
+    hyphens: none;
+  }
+  .lede {
+    margin-bottom: 1.6rem;
+    color: var(--muted);
+  }
+  .total {
+    margin: 0 0 0.9rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--ink);
+    font-size: 0.68rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .key {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.85rem;
+  }
+  .key li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.45rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .count {
+    color: var(--muted);
+  }
+
+  .sheet {
+    padding: 1.4rem 0 2.4rem;
+    border-top: 1px solid var(--ink);
+  }
+  .sheet:first-child {
+    margin-top: 0.9rem;
+  }
+  .sheet h2 {
+    margin-bottom: 1.1rem;
+    font-size: clamp(1.9rem, 3.4vw, 2.5rem);
+  }
+  .sheet h2 a {
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .sheet h2 a:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.15em;
+  }
+  .label {
+    margin: 0 0 0.3rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .text {
+    max-width: 34rem;
+    margin: 0;
+    font-family: var(--font-title);
+    font-size: 1.45rem;
+    font-style: italic;
+    font-weight: 500;
+    line-height: 1.3;
+    color: var(--ink);
+  }
+  dl {
+    display: grid;
+    grid-template-columns: 10rem minmax(0, 1fr) 10rem;
+    gap: 1rem 2rem;
+    margin: 1.6rem 0 1.2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--rule);
+  }
+  .result {
+    grid-column: 1;
+  }
+  .tools {
+    grid-column: 2;
+  }
+  .when {
+    grid-column: 3;
+  }
+  .sparse .when {
+    grid-column: 1;
+  }
+  dt {
+    font-size: 0.68rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  dd {
+    margin: 0.3rem 0 0;
+    font-size: 0.9rem;
+  }
+  .read {
+    margin: 0;
+    font-size: 0.85rem;
+  }
+  .empty {
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--ink);
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  @media (max-width: 860px) {
+    dl {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .result,
+    .tools,
+    .when {
+      grid-column: auto;
+    }
+    .tools {
+      grid-column: 1 / -1;
+      order: 3;
+    }
+    .lab {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: 2.2rem;
+      padding-top: 3rem;
+    }
+    .intro {
+      position: static;
+    }
+    .key {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.2rem 1.6rem;
+    }
+    .key li {
+      justify-content: flex-start;
+      gap: 0.5rem;
+      border-bottom: 0;
+      padding: 0.2rem 0;
+    }
+  }
+</style>

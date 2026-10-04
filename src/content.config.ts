@@ -11,6 +11,10 @@ const blog = defineCollection({
     pubDate: z.coerce.date(),
     updatedDate: z.coerce.date().optional(),
     category: z.enum(['Notes', 'Experiments', 'Learning']).default('Notes'),
+    // Used by the Experiments page. All optional.
+    question: z.string().optional(),
+    outcome: z.enum(['Worked', 'Mixed', 'Did not work', 'In progress']).optional(),
+    tools: z.array(z.string()).default([]),
     tags: z.array(z.string()).default([]),
     startHere: z.boolean().default(false),
   }),

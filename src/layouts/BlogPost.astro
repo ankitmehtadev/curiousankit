@@ -207,6 +207,37 @@ const minutes = readingTime(note.body);
     padding: 0;
     border: 0;
     background: none;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    overflow-x: visible;
+  }
+
+  /* Screenshots: <figure class="shot"> or <figure class="shot wide"> with a markdown image and a figcaption.
+     "wide" lets the picture use the margin column too. */
+  .post-body :global(figure.shot) {
+    margin: 2rem 0;
+  }
+  .post-body :global(figure.shot p) {
+    margin: 0;
+  }
+  .post-body :global(figure.shot img) {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 0;
+    border: 1px solid var(--rule);
+  }
+  .post-body :global(figure.shot figcaption) {
+    margin-top: 0.6rem;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+  .post-body :global(figure.shot.wide) {
+    margin-right: -194px;
+  }
+  :global(:root[data-theme='dark']) .post-body :global(figure.shot img) {
+    filter: brightness(0.88);
   }
 
   /* Pull quote */
@@ -302,6 +333,9 @@ const minutes = readingTime(note.body);
       float: none;
       width: auto;
       margin: 0 0 1.4rem;
+    }
+    .post-body :global(figure.shot.wide) {
+      margin-right: 0;
     }
     .post-head {
       padding-top: 3rem;

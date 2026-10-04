@@ -3,7 +3,8 @@ import { getCollection } from 'astro:content';
 import ListPage from '../../layouts/ListPage.astro';
 import { sortNotes } from '../../utils';
 
-const notes = sortNotes(await getCollection('blog'));
+// Only posts in the Notes category. Experiments and Learning have their own pages.
+const notes = sortNotes(await getCollection('blog')).filter((n) => n.data.category === 'Notes');
 ---
 
 <ListPage title="Notes" intro="Working notes on learning AI, newest first." notes={notes} empty="The first note is on its way." />

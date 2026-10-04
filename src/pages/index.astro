@@ -6,14 +6,16 @@ import Base from '../layouts/Base.astro';
 import { CURRENTLY_STUDYING, SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 import { categoryUrl, formatDate, noteUrl, readingTime, sortNotes } from '../utils';
 
-const notes = sortNotes(await getCollection('blog'));
+const all = sortNotes(await getCollection('blog'));
+// "Latest" and "Recent notes" show notes only. Experiments appear in "From the sandpit".
+const notes = all.filter((n) => n.data.category === 'Notes');
 const latest = notes[0];
 const recent = notes.slice(1, 4);
-const sandpit = notes.filter((n) => n.data.category === 'Experiments').slice(0, 2);
+const sandpit = all.filter((n) => n.data.category === 'Experiments').slice(0, 2);
 const hasBand = sandpit.length > 0 || CURRENTLY_STUDYING.length > 0;
 
 const WORDS = ['no', 'one', 'two', 'three', 'four', 'five'];
-const startCount = notes.filter((n) => n.data.startHere).length || Math.min(5, notes.length);
+const startCount = all.filter((n) => n.data.startHere).length || Math.min(5, all.length);
 const startLabel =
   startCount === 1
     ? 'New here? Start with this note'
@@ -28,7 +30,7 @@ const startLabel =
       <span class="short">These are my working notes: the courses I take, the things I build and the mistakes I make.</span>
     </p>
     {
-      notes.length > 0 && (
+      all.length > 0 && (
         <p class="start">
           <a class="long" href="/start">{startLabel}</a>
           <a class="btn short" href="/start">Start here</a>
