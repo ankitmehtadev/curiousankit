@@ -1,11 +1,25 @@
 ---
+import { Image } from 'astro:assets';
+import portrait from '../assets/ankit.jpg';
 import Base from '../layouts/Base.astro';
 import { LINKS, SITE_TITLE } from '../consts';
 ---
 
 <Base title={`About | ${SITE_TITLE}`} description="Who is behind Curious Ankit, and why these notes exist.">
-  <section class="wrap page">
+  <section class="wrap about">
     <h1>About</h1>
+
+    <figure class="portrait">
+      <Image
+        src={portrait}
+        alt="Portrait of Ankit Mehta"
+        width={640}
+        widths={[320, 480, 640]}
+        sizes="(max-width: 760px) 14rem, 20rem"
+        loading="eager"
+      />
+    </figure>
+
     <div class="prose">
       <p>
         I am Ankit, a business analyst based in Melbourne. For more than twelve years I have worked
@@ -38,14 +52,23 @@ import { LINKS, SITE_TITLE } from '../consts';
 </Base>
 
 <style>
-  .page {
+  .about {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(12rem, 27vw, 20rem);
+    grid-template-areas:
+      'title photo'
+      'prose photo';
+    column-gap: 4rem;
+    align-items: start;
     padding-top: 4rem;
   }
   h1 {
+    grid-area: title;
     margin-bottom: 1.2rem;
     font-size: clamp(2.4rem, 5vw, 3.5rem);
   }
   .prose {
+    grid-area: prose;
     max-width: 40rem;
     font-size: 1.0625rem;
     line-height: 1.75;
@@ -58,5 +81,50 @@ import { LINKS, SITE_TITLE } from '../consts';
     padding-top: 1.3rem;
     border-top: 1px solid var(--rule);
     font-size: 0.85rem;
+  }
+
+  /* The portrait: a ruled plate. Greyscale, fading into the page at the bottom,
+     and it takes on its true colour when pointed at. */
+  .portrait {
+    grid-area: photo;
+    margin: 1rem 0 0;
+    padding-top: 0.8rem;
+    border-top: 1px solid var(--ink);
+  }
+  .portrait :global(img) {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    object-position: 50% 22%;
+    filter: grayscale(1) contrast(1.05);
+    -webkit-mask-image: linear-gradient(to bottom, #000 62%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 62%, transparent 100%);
+    transition: filter 0.5s ease;
+  }
+  .portrait :global(img:hover) {
+    filter: grayscale(0) contrast(1.02);
+  }
+  :global(:root[data-theme='dark']) .portrait :global(img) {
+    filter: grayscale(1) brightness(0.82) contrast(1.05);
+  }
+  :global(:root[data-theme='dark']) .portrait :global(img:hover) {
+    filter: grayscale(0) brightness(0.9) contrast(1.02);
+  }
+
+  @media (max-width: 760px) {
+    .about {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        'title'
+        'photo'
+        'prose';
+      padding-top: 3rem;
+    }
+    .portrait {
+      width: 14rem;
+      margin: 0.2rem 0 1.8rem;
+    }
   }
 </style>
