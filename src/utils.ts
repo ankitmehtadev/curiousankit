@@ -6,8 +6,14 @@ export function sortNotes(notes: Note[]): Note[] {
   return [...notes].sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 }
 
+// Each post lives under the address of its own section:
+// /notes/..., /experiments/... or /learning/...
 export function noteUrl(note: Note): string {
-  return `/notes/${note.id}/`;
+  return `${categoryUrl(note.data.category)}/${note.id}/`;
+}
+
+export function sectionOf(note: Note): string {
+  return categoryUrl(note.data.category).slice(1);
 }
 
 const CATEGORY_URLS: Record<string, string> = {

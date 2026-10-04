@@ -1,0 +1,32 @@
+---
+import { type CollectionEntry, getCollection, render } from 'astro:content';
+import BlogPost from '../../layouts/BlogPost.astro';
+import { sectionOf, sortNotes } from '../../utils';
+
+// One page per post, at /notes/..., /experiments/... or /learning/... depending on its category.
+// Previous and Next stay within the same category.
+export async function getStaticPaths() {
+  const all = sortNotes(await getCollection('blog'));
+  return all.map((note) => {
+    const same = all.filter((n) => n.data.category === note.data.category);
+    const i = same.findIndex((n) => n.id === note.id);
+    return {
+      params: { section: sectionOf(note), slug: note.id },
+      props: { note, newer: same[i - 1], older: same[i + 1] },
+    };
+  });
+}
+
+type Props = {
+  note: CollectionEntry<'blog'>;
+  newer?: CollectionEntry<'blog'>;
+  older?: CollectionEntry<'blog'>;
+};
+
+const { note, newer, older } = Astro.props;
+const { Content } = await render(note);
+---
+
+<BlogPost note={note} newer={newer} older={older}>
+  <Content />
+</BlogPost>

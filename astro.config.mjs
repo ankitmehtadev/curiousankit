@@ -10,5 +10,9 @@ export default defineConfig({
   integrations: [mdx(), sitemap()],
   // Code blocks are styled by our own CSS, not a colour theme.
   markdown: { syntaxHighlight: false },
-  redirects: { '/blog': '/notes' },
+  redirects: {
+    '/blog': '/notes',
+    // Experiment 1 first lived under /notes. This keeps any early link working.
+    '/notes/experiment-1-this-website': '/experiments/experiment-1-this-website',
+  },
 });
