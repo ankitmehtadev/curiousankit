@@ -1,0 +1,12 @@
+---
+import { getCollection } from 'astro:content';
+import ListPage from '../layouts/ListPage.astro';
+import { sortNotes } from '../utils';
+
+// Notes marked startHere: true come first. Until some are marked, the five newest notes are shown.
+const all = sortNotes(await getCollection('blog'));
+const picked = all.filter((n) => n.data.startHere);
+const notes = picked.length > 0 ? picked : all.slice(0, 5);
+---
+
+<ListPage title="Start here" intro="New to the site? These are the notes to read first." notes={notes} />

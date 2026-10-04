@@ -1,0 +1,9 @@
+---
+import { getCollection } from 'astro:content';
+import ListPage from '../../layouts/ListPage.astro';
+import { sortNotes } from '../../utils';
+
+const notes = sortNotes(await getCollection('blog'));
+---
+
+<ListPage title="Notes" intro="Working notes on learning AI, newest first." notes={notes} empty="The first note is on its way." />

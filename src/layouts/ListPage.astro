@@ -1,0 +1,49 @@
+---
+import NoteRow from '../components/NoteRow.astro';
+import { SITE_TITLE } from '../consts';
+import type { Note } from '../utils';
+import Base from './Base.astro';
+
+interface Props {
+  title: string;
+  intro: string;
+  notes: Note[];
+  empty?: string;
+}
+
+const { title, intro, notes, empty = 'The first one is on its way.' } = Astro.props;
+---
+
+<Base title={`${title} | ${SITE_TITLE}`} description={intro}>
+  <section class="wrap page">
+    <header>
+      <h1>{title}</h1>
+      <p class="intro">{intro}</p>
+    </header>
+    {notes.length > 0 ? notes.map((note) => <NoteRow note={note} />) : <p class="empty">{empty}</p>}
+  </section>
+</Base>
+
+<style>
+  .page {
+    padding-top: 4rem;
+  }
+  header {
+    margin-bottom: 2rem;
+  }
+  h1 {
+    margin-bottom: 0.35em;
+    font-size: clamp(2.4rem, 5vw, 3.5rem);
+  }
+  .intro {
+    max-width: 34rem;
+    margin: 0;
+    color: var(--muted);
+  }
+  .empty {
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--rule);
+    color: var(--muted);
+    font-style: italic;
+  }
+</style>

@@ -1,86 +1,319 @@
 ---
-import { Image } from 'astro:assets';
-import type { CollectionEntry } from 'astro:content';
-import BaseHead from '../components/BaseHead.astro';
-import Footer from '../components/Footer.astro';
-import FormattedDate from '../components/FormattedDate.astro';
-import Header from '../components/Header.astro';
+import { AUTHOR, SITE_TITLE } from '../consts';
+import { categoryUrl, formatDate, noteUrl, readingTime } from '../utils';
+import type { Note } from '../utils';
+import Base from './Base.astro';
 
-type Props = CollectionEntry<'blog'>['data'];
+interface Props {
+  note: Note;
+  older?: Note;
+  newer?: Note;
+}
 
-const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
+const { note, older, newer } = Astro.props;
+const { title, description, pubDate, updatedDate, category, tags } = note.data;
+const minutes = readingTime(note.body);
 ---
 
-<html lang="en">
-	<head>
-		<BaseHead title={title} description={description} />
-		<style>
-			main {
-				width: calc(100% - 2em);
-				max-width: 100%;
-				margin: 0;
-			}
-			.hero-image {
-				width: 100%;
-			}
-			.hero-image img {
-				display: block;
-				margin: 0 auto;
-				border-radius: 12px;
-				box-shadow: var(--box-shadow);
-			}
-			.prose {
-				width: 720px;
-				max-width: calc(100% - 2em);
-				margin: auto;
-				padding: 1em;
-				color: rgb(var(--gray-dark));
-			}
-			.title {
-				margin-bottom: 1em;
-				padding: 1em 0;
-				text-align: center;
-				line-height: 1;
-			}
-			.title h1 {
-				margin: 0 0 0.5em 0;
-			}
-			.date {
-				margin-bottom: 0.5em;
-				color: rgb(var(--gray));
-			}
-			.last-updated-on {
-				font-style: italic;
-			}
-		</style>
-	</head>
+<Base title={`${title} | ${SITE_TITLE}`} description={description}>
+  <article>
+    <header class="post-head">
+      <p class="eyebrow"><a href={categoryUrl(category)}>{category}</a></p>
+      <h1>{title}</h1>
+      <p class="sub">{description}</p>
+      <p class="meta">
+        By {AUTHOR.name} &middot; <time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time> &middot; {minutes} min read
+        {updatedDate && <span> &middot; Updated {formatDate(updatedDate)}</span>}
+      </p>
+      <hr class="short" />
+    </header>
 
-	<body>
-		<Header />
-		<main>
-			<article>
-				<div class="hero-image">
-					{heroImage && <Image width={1020} height={510} src={heroImage} alt="" />}
-				</div>
-				<div class="prose">
-					<div class="title">
-						<div class="date">
-							<FormattedDate date={pubDate} />
-							{
-								updatedDate && (
-									<div class="last-updated-on">
-										Last updated on <FormattedDate date={updatedDate} />
-									</div>
-								)
-							}
-						</div>
-						<h1>{title}</h1>
-						<hr />
-					</div>
-					<slot />
-				</div>
-			</article>
-		</main>
-		<Footer />
-	</body>
-</html>
+    <div class="post-body">
+      <slot />
+    </div>
+
+    {
+      (tags.length > 0 || older || newer) && (
+        <footer class="post-foot">
+          {
+            tags.length > 0 && (
+              <ul class="tags">
+                {tags.map((tag) => (
+                  <li>{tag}</li>
+                ))}
+              </ul>
+            )
+          }
+          {
+            (older || newer) && (
+              <nav class="pager" aria-label="More notes">
+                <div class="prev">
+                  {older && (
+                    <a href={noteUrl(older)}>
+                      <span class="eyebrow">Previous</span>
+                      <span class="t">{older.data.title}</span>
+                    </a>
+                  )}
+                </div>
+                <div class="next">
+                  {newer && (
+                    <a href={noteUrl(newer)}>
+                      <span class="eyebrow">Next</span>
+                      <span class="t">{newer.data.title}</span>
+                    </a>
+                  )}
+                </div>
+              </nav>
+            )
+          }
+        </footer>
+      )
+    }
+  </article>
+</Base>
+
+<style>
+  /* Title block */
+  .post-head {
+    width: min(820px, calc(100% - 2 * var(--gutter)));
+    margin: 0 auto;
+    padding: 4.5rem 0 2.6rem;
+    text-align: center;
+  }
+  .eyebrow a {
+    text-decoration: none;
+    color: inherit;
+  }
+  .post-head h1 {
+    margin: 0.7rem 0 0.8rem;
+    font-size: clamp(2.4rem, 5.6vw, 3.5rem);
+    line-height: 1.08;
+  }
+  .sub {
+    max-width: 36rem;
+    margin: 0 auto 1rem;
+    font-family: var(--font-title);
+    font-size: 1.3rem;
+    font-style: italic;
+    font-weight: 500;
+    line-height: 1.35;
+    color: var(--muted);
+  }
+  .meta {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  hr.short {
+    width: 3rem;
+    margin: 1.8rem auto 0;
+    border: 0;
+    border-top: 1px solid var(--ink);
+  }
+
+  /* Reading column: 490px of text with a 160px margin column on the right. */
+  .post-body {
+    width: min(684px, calc(100% - 2 * var(--gutter)));
+    margin: 0 auto;
+    padding-right: 194px;
+    display: flow-root;
+    font-size: 1.0625rem;
+    line-height: 1.75;
+  }
+  .post-body > :global(p:first-of-type)::first-letter {
+    float: left;
+    padding: 0.42rem 0.55rem 0 0;
+    font-family: var(--font-title);
+    font-weight: 500;
+    font-size: 4.2rem;
+    line-height: 0.78;
+    color: var(--ink);
+  }
+  .post-body :global(h2) {
+    margin: 2.4rem 0 0.7rem;
+    font-size: 1.85rem;
+  }
+  .post-body :global(h3) {
+    margin: 2rem 0 0.5rem;
+    font-size: 1.45rem;
+  }
+  .post-body :global(ul),
+  .post-body :global(ol) {
+    margin: 0 0 1.2em;
+    padding-left: 1.3em;
+  }
+  .post-body :global(li) {
+    margin-bottom: 0.35em;
+  }
+  .post-body :global(img) {
+    display: block;
+    margin: 1.8rem 0;
+  }
+  .post-body :global(hr) {
+    margin: 2.5rem 0;
+    border: 0;
+    border-top: 1px solid var(--rule);
+  }
+  .post-body :global(table) {
+    width: 100%;
+    margin: 1.6rem 0;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+  .post-body :global(th),
+  .post-body :global(td) {
+    padding: 0.5rem 0.6rem;
+    border-bottom: 1px solid var(--rule);
+    text-align: left;
+  }
+  .post-body :global(code) {
+    padding: 0.1em 0.35em;
+    background: var(--band);
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+  }
+  .post-body :global(pre) {
+    margin: 1.8rem 0;
+    padding: 1rem 1.2rem;
+    overflow-x: auto;
+    border: 1px solid var(--rule);
+    background: var(--band);
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    line-height: 1.65;
+  }
+  .post-body :global(pre code) {
+    padding: 0;
+    background: none;
+    font-size: inherit;
+  }
+
+  /* A labelled box for prompts: <figure class="prompt"><figcaption>...</figcaption> ... */
+  .post-body :global(figure.prompt) {
+    margin: 1.8rem 0;
+    padding: 1rem 1.2rem;
+    border: 1px solid var(--rule);
+    background: var(--band);
+  }
+  .post-body :global(figure.prompt figcaption) {
+    margin-bottom: 0.7rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .post-body :global(figure.prompt pre) {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+
+  /* Pull quote */
+  .post-body :global(blockquote) {
+    margin: 2.2rem 0;
+    padding: 1.1rem 0.5rem;
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--ink);
+    text-align: center;
+    font-family: var(--font-title);
+    font-size: 1.6rem;
+    font-style: italic;
+    font-weight: 500;
+    line-height: 1.3;
+    color: var(--ink);
+  }
+  .post-body :global(blockquote p) {
+    margin: 0;
+  }
+
+  /* Margin notes: <aside class="note"><em>Margin note.</em> text</aside> */
+  .post-body :global(aside.note) {
+    float: right;
+    clear: right;
+    width: 160px;
+    margin: 0.3rem -194px 1rem 0;
+    padding-top: 0.8rem;
+    border-top: 1px solid var(--rule);
+    font-size: 0.78rem;
+    line-height: 1.55;
+    color: var(--muted);
+  }
+  .post-body :global(aside.note em) {
+    color: var(--ink);
+  }
+
+  /* After the text: tags, author, previous and next */
+  .post-foot {
+    width: min(490px, calc(100% - 2 * var(--gutter)));
+    margin: 3.5rem auto 0;
+  }
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0 0 1.6rem;
+    padding: 0;
+    list-style: none;
+  }
+  .tags li {
+    padding: 0.2rem 0.7rem;
+    border: 1px solid var(--rule);
+    font-size: 0.78rem;
+    line-height: 1.6;
+  }
+  .pager {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--ink);
+  }
+  .pager a {
+    display: block;
+    text-decoration: none;
+  }
+  .pager .next {
+    text-align: right;
+  }
+  .pager .t {
+    display: block;
+    margin-top: 0.15rem;
+    font-family: var(--font-title);
+    font-size: 1.15rem;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--ink);
+  }
+  .pager a:hover .t {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+  }
+
+  /* Narrow screens: margin notes sit inline under their paragraph. */
+  @media (max-width: 860px) {
+    .post-body {
+      width: min(40rem, calc(100% - 2 * var(--gutter)));
+      padding-right: 0;
+      font-size: 1rem;
+    }
+    .post-body :global(aside.note) {
+      float: none;
+      width: auto;
+      margin: 0 0 1.4rem;
+    }
+    .post-head {
+      padding-top: 3rem;
+    }
+    .sub {
+      font-size: 1.15rem;
+    }
+    .pager {
+      grid-template-columns: 1fr;
+    }
+    .pager .next {
+      text-align: left;
+    }
+  }
+</style>

@@ -1,49 +1,318 @@
 ---
-import BaseHead from '../components/BaseHead.astro';
-import Footer from '../components/Footer.astro';
-import Header from '../components/Header.astro';
-import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import { getCollection } from 'astro:content';
+import NoteRow from '../components/NoteRow.astro';
+import Subscribe from '../components/Subscribe.astro';
+import Base from '../layouts/Base.astro';
+import { CURRENTLY_STUDYING, SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import { categoryUrl, formatDate, noteUrl, readingTime, sortNotes } from '../utils';
+
+const notes = sortNotes(await getCollection('blog'));
+const latest = notes[0];
+const recent = notes.slice(1, 4);
+const sandpit = notes.filter((n) => n.data.category === 'Experiments').slice(0, 2);
+const hasBand = sandpit.length > 0 || CURRENTLY_STUDYING.length > 0;
+
+const WORDS = ['no', 'one', 'two', 'three', 'four', 'five'];
+const startCount = notes.filter((n) => n.data.startHere).length || Math.min(5, notes.length);
+const startLabel =
+  startCount === 1
+    ? 'New here? Start with this note'
+    : `New here? Start with these ${WORDS[Math.min(startCount, 5)]} notes`;
 ---
 
-<!doctype html>
-<html lang="en">
-	<head>
-		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
-	</head>
-	<body>
-		<Header />
-		<main>
-			<h1>🧑‍🚀 Hello, Astronaut!</h1>
-			<p>
-				Welcome to the official <a href="https://astro.build/">Astro</a> blog starter template. This template
-				serves as a lightweight, minimally-styled starting point for anyone looking to build a personal
-				website, blog, or portfolio with Astro.
-			</p>
-			<p>
-				This template comes with a few integrations already configured in your{' '}
-				<code>astro.config.mjs</code> file. You can customize your setup with{' '}
-				<a href="https://astro.build/integrations">Astro Integrations</a> to add tools like Tailwind,
-				React, or Vue to your project.
-			</p>
-			<p>Here are a few ideas on how to get started with the template:</p>
-			<ul>
-				<li>Edit this page in <code>src/pages/index.astro</code></li>
-				<li>Edit the site header items in <code>src/components/Header.astro</code></li>
-				<li>Add your name to the footer in <code>src/components/Footer.astro</code></li>
-				<li>Check out the included blog posts in <code>src/content/blog/</code></li>
-				<li>Customize the blog post page layout in <code>src/layouts/BlogPost.astro</code></li>
-			</ul>
-			<p>
-				Have fun! If you get stuck, remember to{' '}
-				<a href="https://docs.astro.build/">read the docs</a>{' '}
-				or <a href="https://astro.build/chat">join us on Discord</a> to ask questions.
-			</p>
-			<p>
-				Looking for a blog template with a bit more personality? Check out{' '}
-				<a href="https://github.com/Charca/astro-blog-template">astro-blog-template</a>{' '}
-				by <a href="https://twitter.com/Charca">Maxi Ferreira</a>.
-			</p>
-		</main>
-		<Footer />
-	</body>
-</html>
+<Base title={SITE_TITLE} description={SITE_DESCRIPTION}>
+  <section class="wrap hero">
+    <h1>A business analyst's notebook on learning AI, <em>one experiment at a time.</em></h1>
+    <p class="lede">
+      <span class="long">I'm Ankit. These are my working notes: the courses I take, the things I build, the mistakes I make, and what I learn along the way.</span>
+      <span class="short">These are my working notes: the courses I take, the things I build and the mistakes I make.</span>
+    </p>
+    {
+      notes.length > 0 && (
+        <p class="start">
+          <a class="long" href="/start">{startLabel}</a>
+          <a class="btn short" href="/start">Start here</a>
+        </p>
+      )
+    }
+  </section>
+
+  {
+    latest && (
+      <section class="wrap latest">
+        <div class="side">
+          <p class="eyebrow">Latest</p>
+          <p class="side-meta">
+            <time datetime={latest.data.pubDate.toISOString()}>{formatDate(latest.data.pubDate)}</time>
+          </p>
+          <p class="side-meta">{latest.data.category} &middot; {readingTime(latest.body)} min read</p>
+        </div>
+        <p class="eyebrow top-line">Latest &middot; {formatDate(latest.data.pubDate, false)}</p>
+        <div class="story">
+          <h2><a href={noteUrl(latest)}>{latest.data.title}</a></h2>
+          <p class="excerpt">{latest.data.description}</p>
+          <p><a class="more" href={noteUrl(latest)}>Read the note</a></p>
+        </div>
+      </section>
+    )
+  }
+
+  {
+    recent.length > 0 && (
+      <section class="wrap recent">
+        <div class="recent-head">
+          <h2>Recent notes</h2>
+          <a href="/notes">All notes</a>
+        </div>
+        {recent.map((note) => (
+          <NoteRow note={note} />
+        ))}
+      </section>
+    )
+  }
+
+  {
+    hasBand && (
+      <section class="band">
+        <div class:list={['wrap', 'band-grid', { both: sandpit.length > 0 && CURRENTLY_STUDYING.length > 0 }]}>
+          {sandpit.length > 0 && (
+            <div class="sandpit">
+              <h2>From the sandpit</h2>
+              <div class="cards">
+                {sandpit.map((note) => (
+                  <a class="card" href={noteUrl(note)}>
+                    <span class="eyebrow">Experiment</span>
+                    <span class="card-title">{note.data.title}</span>
+                    <span class="card-text">{note.data.description}</span>
+                  </a>
+                ))}
+              </div>
+              <p class="more-row">
+                <a href={categoryUrl('Experiments')}>All experiments</a>
+              </p>
+            </div>
+          )}
+          {CURRENTLY_STUDYING.length > 0 && (
+            <div class="studying">
+              <h2>Currently studying</h2>
+              <ul>
+                {CURRENTLY_STUDYING.map((item) => (
+                  <li>
+                    <span class="s-title">{item.title}</span>
+                    <span class="s-meta">{item.meta}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      </section>
+    )
+  }
+
+  <Subscribe />
+</Base>
+
+<style>
+  .hero {
+    padding-top: 5rem;
+    padding-bottom: 3.2rem;
+  }
+  .hero h1 {
+    max-width: 12.5em;
+    margin-bottom: 1.1rem;
+    font-size: clamp(2.5rem, 5.2vw, 3.9rem);
+    line-height: 1.08;
+  }
+  .hero h1 em {
+    font-weight: 500;
+    color: var(--muted);
+  }
+  .lede {
+    max-width: 31rem;
+    margin-bottom: 1.2rem;
+    font-size: 0.98rem;
+    line-height: 1.7;
+  }
+  .start {
+    margin: 0;
+    font-size: 0.85rem;
+  }
+  .short {
+    display: none;
+  }
+
+  .latest {
+    display: grid;
+    grid-template-columns: 7fr 12fr;
+    column-gap: 2rem;
+    padding: 2.4rem 0 2.4rem;
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--rule);
+  }
+  .side .eyebrow {
+    margin-bottom: 0.35rem;
+  }
+  .side-meta {
+    margin: 0;
+    font-size: 0.78rem;
+    line-height: 1.7;
+    color: var(--muted);
+  }
+  .top-line {
+    display: none;
+  }
+  .story h2 {
+    margin-bottom: 0.8rem;
+    font-size: clamp(1.9rem, 3.4vw, 2.5rem);
+    line-height: 1.12;
+  }
+  .story h2 a {
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .story h2 a:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.15em;
+  }
+  .excerpt {
+    margin-bottom: 1.1rem;
+    font-size: 0.98rem;
+  }
+  .more {
+    font-size: 0.85rem;
+  }
+
+  .recent {
+    padding-top: 4rem;
+  }
+  .recent-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 0.6rem;
+  }
+  .recent-head h2 {
+    margin: 0;
+    font-size: 2rem;
+  }
+  .recent-head a {
+    font-size: 0.8rem;
+  }
+
+  .band {
+    margin-top: 4.5rem;
+    padding: 3.2rem 0 3.4rem;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    background: var(--band);
+  }
+  .band-grid {
+    display: grid;
+    gap: 2.5rem;
+  }
+  .band-grid.both {
+    grid-template-columns: 2fr 1fr;
+    gap: 2.8rem;
+  }
+  .band h2 {
+    margin-bottom: 1.3rem;
+    font-size: 1.9rem;
+  }
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.9rem;
+  }
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 1.2rem 1.3rem 1.3rem;
+    border: 1px solid var(--rule);
+    background: var(--card);
+    color: var(--text);
+    text-decoration: none;
+  }
+  .card-title {
+    font-family: var(--font-title);
+    font-size: 1.4rem;
+    font-weight: 600;
+    line-height: 1.15;
+    color: var(--ink);
+  }
+  .card:hover .card-title {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.15em;
+  }
+  .card-text {
+    font-size: 0.85rem;
+    line-height: 1.55;
+  }
+  .more-row {
+    margin: 1rem 0 0;
+    font-size: 0.8rem;
+  }
+  .studying h2 {
+    padding-bottom: 0.9rem;
+    margin-bottom: 0;
+    border-bottom: 1px solid var(--ink);
+  }
+  .studying ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .studying li {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .s-title {
+    display: block;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    color: var(--ink);
+  }
+  .s-meta {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  @media (max-width: 860px) {
+    .band-grid.both {
+      grid-template-columns: 1fr;
+    }
+  }
+  @media (max-width: 760px) {
+    .hero {
+      padding-top: 3rem;
+      padding-bottom: 2rem;
+    }
+    .long {
+      display: none;
+    }
+    .short {
+      display: inline;
+    }
+    .btn.short {
+      display: inline-block;
+    }
+    .latest {
+      display: block;
+      padding: 1.8rem 0;
+    }
+    .side {
+      display: none;
+    }
+    .top-line {
+      display: block;
+      margin-bottom: 0.6rem;
+    }
+    .cards {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

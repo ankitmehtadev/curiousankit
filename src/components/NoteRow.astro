@@ -1,0 +1,75 @@
+---
+import type { Note } from '../utils';
+import { formatDate, noteUrl } from '../utils';
+
+interface Props {
+  note: Note;
+}
+
+const { note } = Astro.props;
+const { title, description, pubDate, category } = note.data;
+---
+
+<article class="row">
+  <p class="when"><time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time></p>
+  <div class="main">
+    <p class="meta-small">{formatDate(pubDate, false)} &middot; {category}</p>
+    <h3><a href={noteUrl(note)}>{title}</a></h3>
+    <p class="excerpt">{description}</p>
+  </div>
+  <p class="cat">{category}</p>
+</article>
+
+<style>
+  .row {
+    display: grid;
+    grid-template-columns: 20% minmax(0, 1fr) auto;
+    column-gap: 1.5rem;
+    padding: 1.5rem 0 1.4rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .when,
+  .cat {
+    margin: 0.4rem 0 0;
+    font-size: 0.78rem;
+    line-height: 1.4;
+    color: var(--muted);
+  }
+  .meta-small {
+    display: none;
+  }
+  h3 {
+    margin: 0 0 0.35rem;
+    font-size: 1.5rem;
+  }
+  h3 a {
+    color: var(--ink);
+    text-decoration: none;
+  }
+  h3 a:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+  }
+  .excerpt {
+    max-width: 34rem;
+    margin: 0;
+    font-size: 0.92rem;
+    line-height: 1.6;
+  }
+  @media (max-width: 760px) {
+    .row {
+      grid-template-columns: 1fr;
+    }
+    .when,
+    .cat {
+      display: none;
+    }
+    .meta-small {
+      display: block;
+      margin: 0 0 0.3rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+  }
+</style>

@@ -1,0 +1,74 @@
+---
+import { SUBSCRIBE_ACTION } from '../consts';
+---
+
+{
+  SUBSCRIBE_ACTION && (
+    <section class="subscribe">
+      <div class="wrap inner">
+        <h2>Get new notes by email</h2>
+        <p>One short email when something new is published. No noise.</p>
+        <form action={SUBSCRIBE_ACTION} method="post" target="_blank">
+          <label class="sr-only" for="subscribe-email">
+            Email address
+          </label>
+          <input id="subscribe-email" type="email" name="email" placeholder="you@example.com" required />
+          <button type="submit">Subscribe</button>
+        </form>
+      </div>
+    </section>
+  )
+}
+
+<style>
+  .subscribe {
+    padding: 4.5rem 0 1rem;
+    text-align: center;
+  }
+  h2 {
+    margin-bottom: 0.4rem;
+    font-size: 2.1rem;
+  }
+  p {
+    margin-bottom: 1.4rem;
+    font-size: 0.92rem;
+  }
+  form {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  input {
+    width: 17rem;
+    max-width: 100%;
+    padding: 0.62rem 0.8rem;
+    border: 1px solid var(--ink);
+    border-radius: 0;
+    font: inherit;
+    font-size: 0.85rem;
+    background: var(--paper);
+    color: var(--ink);
+  }
+  button {
+    padding: 0.62rem 1.1rem;
+    border: 1px solid var(--ink);
+    border-radius: 0;
+    background: var(--ink);
+    color: var(--paper);
+    font: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  button:hover {
+    opacity: 0.85;
+  }
+  @media (max-width: 520px) {
+    form {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    input {
+      width: 100%;
+    }
+  }
+</style>

@@ -1,0 +1,9 @@
+---
+import { getCollection } from 'astro:content';
+import ListPage from '../layouts/ListPage.astro';
+import { sortNotes } from '../utils';
+
+const notes = sortNotes(await getCollection('blog')).filter((n) => n.data.category === 'Experiments');
+---
+
+<ListPage title="Experiments" intro="Things I built and tried, including what went wrong." notes={notes} empty="The first experiment is on its way." />
