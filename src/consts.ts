@@ -2,7 +2,7 @@
 
 export const SITE_TITLE = 'Curious Ankit';
 export const SITE_DESCRIPTION =
-  "A business analyst's notebook on learning AI, one experiment at a time.";
+  "A notebook on learning AI, one experiment at a time.";
 
 export const NAV = [
   { label: 'Notes', href: '/notes' },
@@ -13,7 +13,7 @@ export const NAV = [
 
 export const AUTHOR = {
   name: 'Ankit',
-  bio: 'Business analyst in Melbourne, learning AI in public.',
+  bio: 'Learning AI in public, from Melbourne.',
   // Put a photo in the public folder and set the path, for example '/ankit.jpg'.
   // While this is empty, a plain monogram is shown instead.
   photo: '',
