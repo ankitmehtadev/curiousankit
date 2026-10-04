@@ -37,15 +37,7 @@ import { LINKS, SITE_TITLE } from '../consts';
         the right way to document it.
       </p>
       <p class="elsewhere">
-        <a href={`mailto:${LINKS.email}`}>Email</a>
-        <a href={LINKS.home} target="_blank" rel="noopener">ank1t.com</a>
-        {
-          LINKS.linkedin && (
-            <a href={LINKS.linkedin} target="_blank" rel="noopener">
-              LinkedIn
-            </a>
-          )
-        }
+        <a href={`mailto:${LINKS.email}`}>{LINKS.email}</a>
       </p>
     </div>
   </section>
@@ -83,13 +75,11 @@ import { LINKS, SITE_TITLE } from '../consts';
     font-size: 0.85rem;
   }
 
-  /* The portrait: a ruled plate. Greyscale, fading into the page at the bottom,
+  /* The portrait: greyscale, fading into the page at the bottom,
      and it takes on its true colour when pointed at. */
   .portrait {
     grid-area: photo;
-    margin: 1rem 0 0;
-    padding-top: 0.8rem;
-    border-top: 1px solid var(--ink);
+    margin: 0.7rem 0 0;
   }
   .portrait :global(img) {
     display: block;
