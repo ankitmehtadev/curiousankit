@@ -29,7 +29,3 @@ export const LINKS = {
 // The "Get new notes by email" block appears on the home page once this is set.
 // Use the form address given by your email newsletter service.
 export const SUBSCRIBE_ACTION = '';
-
-// Shown in the "Currently studying" list on the home page. Leave empty to hide it.
-// Example: { title: 'Course name', meta: 'Provider · in progress' }
-export const CURRENTLY_STUDYING: { title: string; meta: string }[] = [];
