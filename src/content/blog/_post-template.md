@@ -2,7 +2,8 @@
 # How to use this file
 # 1. Copy it, rename it (for example my-first-experiment.md) and remove the underscore.
 # 2. category must be Notes, Experiments or Learning.
-# 3. startHere: true adds the note to the Start here page.
+# 3. startHere: true puts the post on the Start here page. Add startReason (one line shown there)
+#    and startOrder (1, 2, 3 ...). Keep that page to about four posts.
 # 4. For an Experiment, also set question, outcome and tools (see the lines at the end of this block).
 #    outcome is one of: Worked, Mixed, Did not work, In progress. They feed the Experiments page.
 # Files whose names begin with an underscore are never published.
@@ -12,6 +13,8 @@ pubDate: 'Oct 04 2026'
 category: 'Notes'
 tags: ['Prompting', 'Business analysis']
 startHere: false
+# startOrder: 1
+# startReason: "One line on why a new reader should start with this."
 # question: 'The one question this experiment asks?'
 # outcome: 'Worked'
 # tools: ['Claude', 'Astro']

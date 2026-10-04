@@ -1,4 +1,7 @@
 ---
+startHere: true
+startOrder: 1
+startReason: "Start here for why the site exists and what to expect."
 title: 'Why I am keeping these notes'
 description: 'A learning journal for AI, kept in the open.'
 pubDate: 'Oct 04 2026'

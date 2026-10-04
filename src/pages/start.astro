@@ -1,12 +1,253 @@
 ---
 import { getCollection } from 'astro:content';
-import ListPage from '../layouts/ListPage.astro';
-import { sortNotes } from '../utils';
+import OutcomeMark from '../components/OutcomeMark.astro';
+import Base from '../layouts/Base.astro';
+import { SITE_TITLE } from '../consts';
+import { categoryUrl, formatDate, noteUrl, sortNotes } from '../utils';
 
-// Notes marked startHere: true come first. Until some are marked, the five newest notes are shown.
 const all = sortNotes(await getCollection('blog'));
-const picked = all.filter((n) => n.data.startHere);
-const notes = picked.length > 0 ? picked : all.slice(0, 5);
+
+// The reading path: only posts marked startHere, in the order you set (oldest first when no order is given).
+const picks = all
+  .filter((n) => n.data.startHere)
+  .sort(
+    (a, b) =>
+      (a.data.startOrder ?? 99) - (b.data.startOrder ?? 99) ||
+      a.data.pubDate.valueOf() - b.data.pubDate.valueOf(),
+  );
+
+// Signposts to the three sections. A section links through only once it has something in it.
+const sections = [
+  {
+    name: 'Notes',
+    category: 'Notes',
+    blurb: 'Working notes on what I am learning and what I make of it.',
+    one: 'note',
+    many: 'notes',
+    empty: 'The first note is on its way.',
+    marks: false,
+  },
+  {
+    name: 'Experiments',
+    category: 'Experiments',
+    blurb: 'Things I build and try, each written up as a question and a result.',
+    one: 'experiment',
+    many: 'experiments',
+    empty: 'The first experiment is on its way.',
+    marks: true,
+  },
+  {
+    name: 'Learning',
+    category: 'Learning',
+    blurb: 'Courses and books I work through, and what I take from each.',
+    one: 'entry',
+    many: 'entries',
+    empty: 'The first entry is on its way.',
+    marks: false,
+  },
+].map((s) => ({
+  ...s,
+  href: categoryUrl(s.category),
+  count: all.filter((n) => n.data.category === s.category).length,
+}));
+
+const description = 'Where to begin: a short reading path, and a guide to the rest of the site.';
 ---
 
-<ListPage title="Start here" intro="New to the site? These are the notes to read first." notes={notes} />
+<Base title={`Start here | ${SITE_TITLE}`} description={description}>
+  <section class="wrap start">
+    <header>
+      <h1>Start here</h1>
+      <p class="intro">
+        This site is a notebook about learning AI, kept by a business analyst in Melbourne. It holds
+        working notes, experiments, and what I take from the courses I do. If you only have a few
+        minutes, begin with the pieces below, in this order.
+      </p>
+    </header>
+
+    {
+      picks.length > 0 && (
+        <section class="path" aria-labelledby="path-title">
+          <h2 id="path-title">Read these first</h2>
+          <ol>
+            {picks.map((note, i) => (
+              <li>
+                <span class="num" aria-hidden="true">{i + 1}</span>
+                <div class="body">
+                  <h3><a href={noteUrl(note)}>{note.data.title}</a></h3>
+                  {note.data.startReason && <p class="reason">{note.data.startReason}</p>}
+                  <p class="meta">
+                    {note.data.category} &middot; <time datetime={note.data.pubDate.toISOString()}>{formatDate(note.data.pubDate)}</time>
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )
+    }
+
+    <section class="explore" aria-labelledby="explore-title">
+      <h2 id="explore-title">Then explore</h2>
+      <div class="signposts">
+        {
+          sections.map((s) => (
+            <div class="post">
+              <h3>{s.count > 0 ? <a href={s.href}>{s.name}</a> : s.name}</h3>
+              <p class="blurb">{s.blurb}</p>
+              {
+                s.marks && (
+                  <ul class="key" aria-label="Result key">
+                    <li><OutcomeMark outcome="Worked" /></li>
+                    <li><OutcomeMark outcome="Mixed" /></li>
+                    <li><OutcomeMark outcome="Did not work" /></li>
+                    <li><OutcomeMark outcome="In progress" /></li>
+                  </ul>
+                )
+              }
+              <p class="count">
+                {
+                  s.count > 0 ? (
+                    <a href={s.href}>
+                      {s.count} {s.count === 1 ? s.one : s.many}
+                    </a>
+                  ) : (
+                    s.empty
+                  )
+                }
+              </p>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+  </section>
+</Base>
+
+<style>
+  .start {
+    padding-top: 4rem;
+  }
+  h1 {
+    margin-bottom: 0.5em;
+    font-size: clamp(2.4rem, 5vw, 3.5rem);
+  }
+  .intro {
+    max-width: 36rem;
+    margin: 0 0 3.2rem;
+    font-size: 1.05rem;
+    line-height: 1.75;
+  }
+  h2 {
+    margin: 0 0 1.1rem;
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--ink);
+    font-size: 2rem;
+  }
+
+  /* The reading path */
+  .path {
+    margin-bottom: 4rem;
+  }
+  ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .path li {
+    display: grid;
+    grid-template-columns: 4rem minmax(0, 1fr);
+    padding: 1.4rem 0 1.5rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .num {
+    font-family: var(--font-title);
+    font-size: 2.4rem;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--muted);
+  }
+  .body h3 {
+    margin-bottom: 0.35rem;
+    font-size: clamp(1.7rem, 3vw, 2.2rem);
+  }
+  .body h3 a {
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .body h3 a:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.15em;
+  }
+  .reason {
+    max-width: 36rem;
+    margin: 0 0 0.5rem;
+  }
+  .meta {
+    margin: 0;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+
+  /* The signposts */
+  .signposts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 3rem;
+  }
+  .post {
+    display: flex;
+    flex-direction: column;
+  }
+  .post h3 {
+    margin-bottom: 0.5rem;
+    font-size: 1.7rem;
+  }
+  .post h3 a {
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .post h3 a:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.15em;
+  }
+  .blurb {
+    margin-bottom: 0.9rem;
+    font-size: 0.92rem;
+    line-height: 1.6;
+  }
+  .key {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 1.1rem;
+    margin: 0 0 0.9rem;
+    padding: 0;
+    list-style: none;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+  .count {
+    margin: auto 0 0;
+    padding-top: 0.4rem;
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+
+  @media (max-width: 860px) {
+    .start {
+      padding-top: 3rem;
+    }
+    .signposts {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: 2rem;
+    }
+    .path li {
+      grid-template-columns: 2.6rem minmax(0, 1fr);
+    }
+    .num {
+      font-size: 2rem;
+    }
+  }
+</style>

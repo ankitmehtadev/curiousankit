@@ -16,7 +16,10 @@ const blog = defineCollection({
     outcome: z.enum(['Worked', 'Mixed', 'Did not work', 'In progress']).optional(),
     tools: z.array(z.string()).default([]),
     tags: z.array(z.string()).default([]),
+    // Start here page: mark a post with startHere, say why in one line, and set its place in the order.
     startHere: z.boolean().default(false),
+    startReason: z.string().optional(),
+    startOrder: z.number().optional(),
   }),
 });
 

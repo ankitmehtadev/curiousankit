@@ -13,13 +13,6 @@ const latest = notes[0];
 const recent = notes.slice(1, 4);
 const sandpit = all.filter((n) => n.data.category === 'Experiments').slice(0, 2);
 const hasBand = sandpit.length > 0 || CURRENTLY_STUDYING.length > 0;
-
-const WORDS = ['no', 'one', 'two', 'three', 'four', 'five'];
-const startCount = all.filter((n) => n.data.startHere).length || Math.min(5, all.length);
-const startLabel =
-  startCount === 1
-    ? 'New here? Start with this note'
-    : `New here? Start with these ${WORDS[Math.min(startCount, 5)]} notes`;
 ---
 
 <Base title={SITE_TITLE} description={SITE_DESCRIPTION}>
@@ -32,7 +25,7 @@ const startLabel =
     {
       all.length > 0 && (
         <p class="start">
-          <a class="long" href="/start">{startLabel}</a>
+          <a class="long" href="/start">New here? Start here</a>
           <a class="btn short" href="/start">Start here</a>
         </p>
       )
