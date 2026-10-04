@@ -1,6 +1,6 @@
 ---
 import { AUTHOR, SITE_TITLE } from '../consts';
-import { categoryUrl, formatDate, noteUrl, readingTime } from '../utils';
+import { categoryUrl, formatDate, noteUrl, readingTime, sectionOf } from '../utils';
 import type { Note } from '../utils';
 import Base from './Base.astro';
 
@@ -15,7 +15,7 @@ const { title, description, pubDate, updatedDate, category, tags } = note.data;
 const minutes = readingTime(note.body);
 ---
 
-<Base title={`${title} | ${SITE_TITLE}`} description={description}>
+<Base title={`${title} | ${SITE_TITLE}`} description={description} image={`/og/${sectionOf(note)}/${note.id}.png`}>
   <article>
     <header class="post-head">
       <p class="eyebrow"><a href={categoryUrl(category)}>{category}</a></p>
