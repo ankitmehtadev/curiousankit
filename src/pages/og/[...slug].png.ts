@@ -82,7 +82,9 @@ function titleSize(title: string) {
 }
 
 function postCard(title: string, category: string, date: Date) {
-  const shown = title.length > 110 ? title.slice(0, 107).trimEnd() + '...' : title;
+  const clipped = title.length > 110 ? title.slice(0, 107).trimEnd() + '...' : title;
+  // Keep anything in brackets together, so a line never breaks inside "(and will)".
+  const shown = clipped.replace(/\([^)]*\)/g, (group) => group.replace(/ /g, '\u00A0'));
   // Titles such as "Experiment 1: This website" read best split at the colon.
   const colon = shown.indexOf(': ');
   const lines = colon > 0 ? [shown.slice(0, colon + 1), shown.slice(colon + 2)] : [shown];
