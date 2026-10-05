@@ -13,6 +13,8 @@ interface Props {
 const { note, older, newer } = Astro.props;
 const { title, description, pubDate, updatedDate, category, tags } = note.data;
 const minutes = readingTime(note.body);
+// Only posts that contain margin notes get a margin column. Every other post is centred.
+const hasNotes = /<aside[^>]*class=["']note["']/.test(note.body ?? '');
 ---
 
 <Base title={`${title} | ${SITE_TITLE}`} description={description} image={`/og/${sectionOf(note)}/${note.id}.png`}>
@@ -28,13 +30,13 @@ const minutes = readingTime(note.body);
       <hr class="short" />
     </header>
 
-    <div class="post-body">
+    <div class:list={['post-body', { 'has-notes': hasNotes }]}>
       <slot />
     </div>
 
     {
       (tags.length > 0 || older || newer) && (
-        <footer class="post-foot">
+        <footer class:list={['post-foot', { 'has-notes': hasNotes }]}>
           {
             tags.length > 0 && (
               <ul class="tags">
@@ -111,14 +113,18 @@ const minutes = readingTime(note.body);
     border-top: 1px solid var(--ink);
   }
 
-  /* Reading column: 490px of text with a 160px margin column on the right. */
+  /* Reading column: centred, 640px wide. */
   .post-body {
-    width: min(684px, calc(100% - 2 * var(--gutter)));
+    width: min(640px, calc(100% - 2 * var(--gutter)));
     margin: 0 auto;
-    padding-right: 194px;
     display: flow-root;
     font-size: 1.0625rem;
     line-height: 1.75;
+  }
+  /* With margin notes: 490px of text and a 160px margin column on the right. */
+  .post-body.has-notes {
+    width: min(684px, calc(100% - 2 * var(--gutter)));
+    padding-right: 194px;
   }
   .post-body > :global(p:first-of-type)::first-letter {
     float: left;
@@ -132,6 +138,10 @@ const minutes = readingTime(note.body);
   .post-body :global(h2) {
     margin: 2.4rem 0 0.7rem;
     font-size: 1.85rem;
+  }
+  .post-body :global(h2 em),
+  .post-body :global(h3 em) {
+    font-weight: 500;
   }
   .post-body :global(h3) {
     margin: 2rem 0 0.5rem;
@@ -234,6 +244,10 @@ const minutes = readingTime(note.body);
     color: var(--muted);
   }
   .post-body :global(figure.shot.wide) {
+    margin-inline: -3rem;
+  }
+  .post-body.has-notes :global(figure.shot.wide) {
+    margin-left: 0;
     margin-right: -194px;
   }
   :global(:root[data-theme='dark']) .post-body :global(figure.shot img) {
@@ -276,8 +290,11 @@ const minutes = readingTime(note.body);
 
   /* After the text: tags, author, previous and next */
   .post-foot {
-    width: min(490px, calc(100% - 2 * var(--gutter)));
+    width: min(640px, calc(100% - 2 * var(--gutter)));
     margin: 3.5rem auto 0;
+  }
+  .post-foot.has-notes {
+    width: min(490px, calc(100% - 2 * var(--gutter)));
   }
   .tags {
     display: flex;
@@ -324,7 +341,8 @@ const minutes = readingTime(note.body);
 
   /* Narrow screens: margin notes sit inline under their paragraph. */
   @media (max-width: 860px) {
-    .post-body {
+    .post-body,
+    .post-body.has-notes {
       width: min(40rem, calc(100% - 2 * var(--gutter)));
       padding-right: 0;
       font-size: 1rem;
@@ -334,8 +352,9 @@ const minutes = readingTime(note.body);
       width: auto;
       margin: 0 0 1.4rem;
     }
-    .post-body :global(figure.shot.wide) {
-      margin-right: 0;
+    .post-body :global(figure.shot.wide),
+    .post-body.has-notes :global(figure.shot.wide) {
+      margin-inline: 0;
     }
     .post-head {
       padding-top: 3rem;
