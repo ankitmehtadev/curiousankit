@@ -31,7 +31,7 @@ export const LINKS = {
   email: 'hello@curiousankit.com',
   github: 'https://github.com/ankitmehtadev',
   // Paste your LinkedIn profile address to show it in the footer, menu and About page.
-  linkedin: '',
+  linkedin: 'https://www.linkedin.com/in/ankit-lead/',
 };
 
 // The red ticker on the home page. Replace the bracketed lines with what you are into right now.
@@ -42,11 +42,11 @@ export const CURRENTLY_CURIOUS = [
   "[A question that won't leave you alone]",
 ];
 
-// Email sign up. Paste the form address from your newsletter service (Buttondown, Kit, etc.).
+// Email sign up through Kit. Paste the form address, for example 'https://app.kit.com/forms/1234567/subscriptions'.
 // While this is empty, the subscribe box opens an email to you instead, so nobody is lost.
 export const SUBSCRIBE_ACTION = '';
 // The name of the email field your newsletter service expects.
-export const SUBSCRIBE_FIELD = 'email';
+export const SUBSCRIBE_FIELD = 'email_address'; // Kit's field name
 
 // The five Rabbit Hole topics, in the order they are shown.
 export const RABBIT_TOPICS = ['Mind', 'History', 'Money', 'Productivity', 'Wildcard'] as const;
