@@ -1,0 +1,60 @@
+---
+# AI JOURNEY NOTE TEMPLATE
+# 1. Copy this file, rename it (for example prompting-is-clear-thinking.mdx) and drop the underscore.
+#    Files whose names start with an underscore are never published.
+# 2. The address will be /notes/<file name>/
+# 3. Every ## heading becomes a numbered section (01, 02 ...) and appears in "In this note".
+title: '[Note title]'
+description: '[Standfirst: one or two sentences that tell the reader what they will get from this note.]'
+pubDate: 'Oct 20 2026'
+# updatedDate: 'Oct 25 2026'
+stream: 'AI Journey'
+format: 'Note'
+topic: '[Lessons]'           # any short topic: Lessons, Tools, Prompting, Courses ...
+tags: ['ai', 'prompting']
+takeaways:                   # optional, shown as a numbered list at the end
+  - '[First takeaway]'
+  - '[Second takeaway]'
+  - '[Third takeaway]'
+sources:                     # optional, "Notes and sources" at the foot (url is optional)
+  - label: '[Footnote or source]'
+    url: 'https://example.com'
+---
+
+import PullQuote from '../../components/post/PullQuote.astro';
+import KeyIdea from '../../components/post/KeyIdea.astro';
+import Prompt from '../../components/post/Prompt.astro';
+import Figure from '../../components/post/Figure.astro';
+
+## The idea
+
+[Opening paragraph. What sparked the thought, and why it matters to you.]
+
+[Body paragraph. Links look [like this](https://example.com), and a footnote can point down to the sources like this<sup>[1](#sources)</sup>.]
+
+<PullQuote>[A pull quote from the note that is worth repeating.]</PullQuote>
+
+## Why it matters
+
+[Body paragraph.]
+
+<KeyIdea>[A callout for the one thing readers should remember.]</KeyIdea>
+
+<Prompt label="Prompt I used">
+
+```text
+[Paste the prompt or code snippet here]
+```
+
+</Prompt>
+
+## What I learned
+
+[Body paragraph.]
+
+{/* For an image: import sketch from '../../assets/my-sketch.png'; then <Figure src={sketch} alt="..." n={1} caption="..." /> */}
+<Figure n={1} caption="[Caption]" />
+
+## So what?
+
+[Closing paragraph. What you would tell a friend.]

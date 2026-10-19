@@ -1,0 +1,27 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import RabbitLayout from '../../layouts/RabbitLayout.astro';
+import { isRabbit, sortNotes } from '../../utils';
+
+// One page per rabbit hole, at /rabbit-holes/<slug>/.
+// "Next rabbit hole" is the one published before it, wrapping round to the newest at the end.
+export async function getStaticPaths() {
+  const holes = sortNotes((await getCollection('blog')).filter(isRabbit));
+  return holes.map((note, i) => ({
+    params: { slug: note.id },
+    props: { note, next: holes.length > 1 ? holes[(i + 1) % holes.length] : undefined },
+  }));
+}
+
+type Props = {
+  note: CollectionEntry<'blog'>;
+  next?: CollectionEntry<'blog'>;
+};
+
+const { note, next } = Astro.props;
+const { Content } = await render(note);
+---
+
+<RabbitLayout note={note} next={next}>
+  <Content />
+</RabbitLayout>

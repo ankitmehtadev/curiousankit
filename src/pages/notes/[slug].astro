@@ -1,0 +1,28 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import NoteLayout from '../../layouts/NoteLayout.astro';
+import { isAINote, sortNotes } from '../../utils';
+
+// One page per AI Journey note, at /notes/<slug>/. Previous and next stay within AI notes.
+export async function getStaticPaths() {
+  const notes = sortNotes((await getCollection('blog')).filter(isAINote));
+  return notes.map((note, i) => ({
+    params: { slug: note.id },
+    // The list is newest first, so the next (newer) note sits before this one.
+    props: { note, next: notes[i - 1], prev: notes[i + 1] },
+  }));
+}
+
+type Props = {
+  note: CollectionEntry<'blog'>;
+  prev?: CollectionEntry<'blog'>;
+  next?: CollectionEntry<'blog'>;
+};
+
+const { note, prev, next } = Astro.props;
+const { Content, headings } = await render(note);
+---
+
+<NoteLayout note={note} headings={headings} prev={prev} next={next}>
+  <Content />
+</NoteLayout>

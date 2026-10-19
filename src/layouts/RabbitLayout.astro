@@ -1,0 +1,655 @@
+---
+// Rabbit Hole note: a white surface that fades into the dark, with a depth meter that
+// follows you down through the levels. "Short on time?" keeps you at the surface.
+import Base from './Base.astro';
+import PostScripts from '../components/post/PostScripts.astro';
+import Sources from '../components/post/Sources.astro';
+import Takeaways from '../components/post/Takeaways.astro';
+import { LINKS, SITE_TITLE } from '../consts';
+import { formatDate, isoDate, noteUrl, readingTime, sectionOf, type Note } from '../utils';
+import '../styles/prose.css';
+
+interface Props {
+  note: Note;
+  next?: Note;
+}
+
+const { note, next } = Astro.props;
+const d = note.data;
+const depth = d.depth ?? 1;
+const minutes = readingTime(note.body);
+const hasWayOut = d.takeaways.length > 0;
+const mailto = `mailto:${LINKS.email}?subject=${encodeURIComponent('Re: ' + d.title)}`;
+
+// "Why we procrastinate (and what helps)": the part in brackets turns red.
+const m = d.title.match(/^(.*?)\s*(\([^)]*\))$/);
+const titleMain = m ? m[1] : d.title;
+const titleRed = m ? m[2] : '';
+---
+
+<Base title={`${d.title} | ${SITE_TITLE}`} description={d.description} image={`/og/${sectionOf(note)}/${note.id}.png`}>
+  <div class="rh" data-rabbit-page>
+    <section class="hero wrap" id="top">
+      <div class="meta">
+        <span class="tag">Rabbit Hole · {d.topic}</span>
+        <span class="depth" aria-label={`Depth ${depth} of 3`}>
+          Depth
+          <span class="dots" aria-hidden="true">
+            {[1, 2, 3].map((i) => <span class:list={['d', { on: i <= depth }]} />)}
+          </span>
+        </span>
+        <time class="grey" datetime={isoDate(d.pubDate)}>{formatDate(d.pubDate)}</time>
+        <span class="grey">{minutes} min to the bottom</span>
+      </div>
+      <h1>{titleMain}{titleRed && <> <span class="red">{titleRed}</span></>}</h1>
+
+      <div class="surface">
+        <div class="surf-text">
+          <div class="surf-label">The surface · the 30 second version</div>
+          {
+            d.surface.length > 1 ? (
+              <ul>
+                {d.surface.map((s) => (
+                  <li>{s}</li>
+                ))}
+              </ul>
+            ) : (
+              <p>{d.surface[0] ?? d.description}</p>
+            )
+          }
+        </div>
+        {
+          hasWayOut && (
+            <button type="button" class="surf-btn" data-surface aria-pressed="false">
+              <span class="surf-small" data-surf-label>Short on time?</span>
+              <span class="surf-cta" data-surf-cta>Skip to what helps →</span>
+            </button>
+          )
+        }
+      </div>
+    </section>
+    <div class="fade" aria-hidden="true"></div>
+
+    <div class="mobile-meter" aria-hidden="true">
+      <div class="mm-labels" data-mm-labels></div>
+      <div class="mm-track"><div class="mm-fill" data-fill></div><span class="mm-knob" data-knob></span></div>
+    </div>
+
+    <div class="body wrap">
+      <aside class="meter" aria-label="Depth meter">
+        <div class="meter-inner">
+          <div class="track">
+            <div class="fill" data-fill></div>
+            <div class="knob" data-knob></div>
+          </div>
+          <nav class="levels" data-levels>
+            <a href="#top" data-target="top"><span class="lv-depth">Surface</span>TL;DR</a>
+            {hasWayOut && <a href="#way-out" data-target="way-out"><span class="lv-depth">Way out</span>What helps</a>}
+          </nav>
+        </div>
+      </aside>
+
+      <div class="main">
+        <div class="deep" data-deep>
+          <div class="prose">
+            <slot />
+          </div>
+        </div>
+
+        {
+          hasWayOut && (
+            <section id="way-out" class="way-out" aria-labelledby="way-out-title">
+              <h2 id="way-out-title">
+                <span class="wo-label">Climbing back out</span>What actually helps
+              </h2>
+              <Takeaways items={d.takeaways} bare label="What actually helps" />
+            </section>
+          )
+        }
+
+        <Sources sources={d.sources} label="Want to go even deeper?" />
+      </div>
+    </div>
+
+    <div class="wrap">
+      <section class="next" aria-label="Next rabbit hole">
+        {
+          next && (
+            <a class="nx" href={noteUrl(next)}>
+              <span class="nl">Next rabbit hole ↓</span>
+              <span class="nt">{next.data.title}</span>
+            </a>
+          )
+        }
+        <div class="reply">
+          <a class="btn" href={mailto}>Reply by email →</a>
+          <a class="mono sub-link" href="/subscribe/">Subscribe for the next one</a>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <PostScripts />
+</Base>
+
+<script>
+  type Stop = { label: string; title: string; el: HTMLElement; link?: HTMLAnchorElement; mm?: HTMLElement; surface: boolean };
+
+  const levelsNav = document.querySelector<HTMLElement>('[data-levels]');
+  const mmLabels = document.querySelector<HTMLElement>('[data-mm-labels]');
+  const deep = document.querySelector<HTMLElement>('[data-deep]');
+  const top = document.getElementById('top');
+  const wayOut = document.getElementById('way-out');
+  const wayLink = levelsNav?.querySelector<HTMLAnchorElement>('[data-target="way-out"]') ?? undefined;
+  const topLink = levelsNav?.querySelector<HTMLAnchorElement>('[data-target="top"]') ?? undefined;
+
+  // Build the list of stops: Surface, each <Level>, Way out.
+  const stops: Stop[] = [];
+  if (top) stops.push({ label: 'Surface', title: 'TL;DR', el: top, link: topLink, surface: true });
+  document.querySelectorAll<HTMLElement>('.level-h').forEach((h) => {
+    const link = document.createElement('a');
+    link.href = `#${h.id}`;
+    const small = document.createElement('span');
+    small.className = 'lv-depth';
+    small.textContent = h.dataset.meter ?? '';
+    link.append(small, document.createTextNode(h.dataset.meterTitle ?? ''));
+    if (wayLink) levelsNav?.insertBefore(link, wayLink);
+    else levelsNav?.append(link);
+    stops.push({ label: h.dataset.meter ?? '', title: h.dataset.meterTitle ?? '', el: h, link, surface: false });
+  });
+  if (wayOut) stops.push({ label: 'Way out', title: 'What helps', el: wayOut, link: wayLink, surface: true });
+
+  stops.forEach((s) => {
+    const span = document.createElement('span');
+    span.textContent = s.label;
+    mmLabels?.append(span);
+    s.mm = span;
+  });
+
+  const fills = document.querySelectorAll<HTMLElement>('[data-fill]');
+  const knobs = document.querySelectorAll<HTMLElement>('[data-knob]');
+  let surfaceOnly = false;
+
+  function update() {
+    const el = document.documentElement;
+    const max = el.scrollHeight - el.clientHeight;
+    const p = max > 0 ? Math.min(100, (el.scrollTop / max) * 100) : 0;
+    fills.forEach((f) => {
+      if (f.closest('.mobile-meter')) f.style.width = `${p}%`;
+      else f.style.height = `${p}%`;
+    });
+    knobs.forEach((k) => {
+      if (k.closest('.mobile-meter')) k.style.left = `calc(${p}% - 7px)`;
+      else k.style.top = `calc(${p}% - 10px)`;
+    });
+    const visible = stops.filter((s) => !surfaceOnly || s.surface);
+    let cur = 0;
+    visible.forEach((s, i) => {
+      if (s.el.getBoundingClientRect().top < innerHeight * 0.4) cur = i;
+    });
+    if (p >= 99) cur = visible.length - 1;
+    visible.forEach((s, i) => {
+      const state = i === cur ? 'now' : i < cur ? 'past' : 'ahead';
+      if (s.link) s.link.dataset.state = state;
+      if (s.mm) s.mm.dataset.state = state;
+    });
+  }
+  addEventListener('scroll', update, { passive: true });
+  addEventListener('resize', update);
+  update();
+
+  // Short on time? Hide the levels and jump to what helps. Press again to go back down.
+  const surfBtn = document.querySelector<HTMLButtonElement>('[data-surface]');
+  const surfLabel = document.querySelector<HTMLElement>('[data-surf-label]');
+  const surfCta = document.querySelector<HTMLElement>('[data-surf-cta]');
+  surfBtn?.addEventListener('click', () => {
+    surfaceOnly = !surfaceOnly;
+    surfBtn.setAttribute('aria-pressed', String(surfaceOnly));
+    if (deep) deep.hidden = surfaceOnly;
+    stops.forEach((s) => {
+      if (s.surface) return;
+      if (s.link) s.link.hidden = surfaceOnly;
+      if (s.mm) s.mm.hidden = surfaceOnly;
+    });
+    if (surfLabel) surfLabel.textContent = surfaceOnly ? 'Staying at the surface' : 'Short on time?';
+    if (surfCta) surfCta.textContent = surfaceOnly ? 'Take me down ↓' : 'Skip to what helps →';
+    const target = surfaceOnly ? wayOut : stops.find((s) => !s.surface)?.el ?? deep;
+    target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    update();
+  });
+</script>
+
+<style>
+  /* The header sits on the white surface on this page. */
+  :global(body:has([data-rabbit-page]) .site-header) {
+    background: var(--white);
+    color: var(--ink);
+  }
+  :global(body:has([data-rabbit-page]) .site-header .logo) {
+    color: var(--ink);
+  }
+  :global(body:has([data-rabbit-page]) .site-header .open) {
+    background: var(--ink);
+  }
+  :global(body:has([data-rabbit-page]) .site-header .search) {
+    border-color: #d6d6d2;
+  }
+
+  .hero {
+    background: var(--white);
+    color: var(--ink);
+    padding-top: 40px;
+    padding-bottom: 72px;
+    scroll-margin-top: 0;
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 24px;
+    margin-bottom: 28px;
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+  .tag {
+    padding: 6px 10px;
+    border: 1px solid var(--ink);
+  }
+  .depth {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .dots {
+    display: inline-flex;
+    gap: 4px;
+  }
+  .d {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 1.5px solid var(--red);
+  }
+  .d.on {
+    background: var(--red);
+  }
+  .grey {
+    color: #5e5e5a;
+  }
+  h1 {
+    max-width: 1200px;
+    font-size: clamp(56px, 7.4vw, 124px);
+    line-height: 0.88;
+    letter-spacing: -0.055em;
+  }
+  .surface {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    margin-top: 48px;
+    border: 2px solid var(--ink);
+  }
+  .surf-text {
+    flex: 3 1 480px;
+    padding: 24px 28px;
+    font-size: 22px;
+    line-height: 1.45;
+  }
+  .surf-label {
+    margin-bottom: 10px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--red);
+  }
+  .surf-text ul {
+    margin: 0;
+    padding-left: 1.1em;
+  }
+  .surf-text li + li {
+    margin-top: 6px;
+  }
+  .surf-text li::marker {
+    color: var(--red);
+  }
+  .surf-btn {
+    flex: 1 1 220px;
+    min-height: 64px;
+    padding: 24px;
+    border: 0;
+    border-left: 2px solid var(--ink);
+    background: var(--white);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 13px;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 12px;
+    transition: background 0.2s, color 0.2s;
+  }
+  .surf-btn:hover,
+  .surf-btn[aria-pressed='true'] {
+    background: var(--ink);
+    color: var(--white);
+  }
+  .surf-cta {
+    font-family: var(--font);
+    font-weight: 800;
+    font-size: 26px;
+    letter-spacing: -0.03em;
+  }
+  .fade {
+    height: 220px;
+    background: linear-gradient(var(--white), var(--ink));
+  }
+  .mobile-meter {
+    display: none;
+  }
+
+  .body {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 48px;
+    padding-top: 24px;
+    padding-bottom: 96px;
+  }
+  .meter {
+    flex: 1 1 200px;
+    max-width: 260px;
+  }
+  .meter-inner {
+    position: sticky;
+    top: 32px;
+    display: flex;
+    gap: 18px;
+  }
+  .track {
+    position: relative;
+    flex: 0 0 6px;
+    width: 6px;
+    height: 420px;
+    background: var(--charcoal);
+  }
+  .fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 6px;
+    height: 0;
+    background: var(--red);
+  }
+  .knob {
+    position: absolute;
+    left: -7px;
+    top: -10px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--red);
+    box-shadow: 0 0 0 4px var(--ink);
+  }
+  .levels {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 420px;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  .levels :global(a) {
+    color: #5e5e5a;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .levels :global(a[data-state='past']) {
+    color: var(--white);
+  }
+  .levels :global(a[data-state='now']),
+  .levels :global(a:hover) {
+    color: var(--red);
+  }
+  .levels :global(a[hidden]) {
+    display: none;
+  }
+  .levels :global(.lv-depth) {
+    display: block;
+    font-size: 11px;
+    opacity: 0.7;
+  }
+
+  .main {
+    flex: 999 1 560px;
+    min-width: 0;
+    max-width: 720px;
+  }
+  .deep[hidden] {
+    display: none;
+  }
+  .way-out {
+    margin-top: 72px;
+    scroll-margin-top: 24px;
+  }
+  .deep[hidden] + .way-out {
+    margin-top: 0;
+  }
+  .way-out h2 {
+    margin-bottom: 20px;
+    font-size: 44px;
+    line-height: 0.95;
+    letter-spacing: -0.045em;
+  }
+  .wo-label {
+    display: block;
+    margin-bottom: 10px;
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 13px;
+    letter-spacing: 0;
+    color: var(--red);
+  }
+
+  .next {
+    display: flex;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--white);
+    margin-bottom: 32px;
+  }
+  .nx {
+    flex: 2 1 520px;
+    padding: 32px 32px 48px 0;
+    text-decoration: none;
+    color: var(--white);
+  }
+  .nl {
+    display: block;
+    margin-bottom: 14px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--smoke);
+  }
+  .nt {
+    display: block;
+    font-weight: 800;
+    font-size: clamp(36px, 4vw, 64px);
+    line-height: 0.92;
+    letter-spacing: -0.05em;
+    transition: color 0.2s;
+  }
+  .nx:hover .nt {
+    color: var(--red);
+  }
+  .reply {
+    flex: 1 1 320px;
+    padding: 32px 0 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    justify-content: flex-end;
+  }
+  .reply .btn {
+    align-self: flex-start;
+  }
+  .sub-link {
+    font-size: 13px;
+  }
+  .sub-link:hover {
+    color: var(--red);
+  }
+
+  @media (max-width: 899px) {
+    .hero {
+      padding-top: 24px;
+      padding-bottom: 32px;
+    }
+    .meta {
+      gap: 8px 14px;
+      margin-bottom: 18px;
+      font-size: 11px;
+    }
+    .meta time {
+      display: none;
+    }
+    .tag {
+      padding: 5px 8px;
+    }
+    .depth {
+      gap: 6px;
+    }
+    .dots {
+      gap: 3px;
+    }
+    .d {
+      width: 8px;
+      height: 8px;
+    }
+    h1 {
+      font-size: clamp(44px, 12.8vw, 72px);
+    }
+    .surface {
+      display: block;
+      margin-top: 28px;
+    }
+    .surf-text {
+      padding: 16px;
+      font-size: 18px;
+    }
+    .surf-label {
+      font-size: 11px;
+      margin-bottom: 8px;
+    }
+    .surf-btn {
+      width: 100%;
+      min-height: 56px;
+      padding: 0 16px;
+      border-left: 0;
+      border-top: 2px solid var(--ink);
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font);
+      font-weight: 800;
+      font-size: 16px;
+    }
+    .surf-cta {
+      font-size: 16px;
+      letter-spacing: -0.01em;
+    }
+    .fade {
+      height: 120px;
+    }
+    .mobile-meter {
+      display: block;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      padding: 10px var(--gutter);
+      background: var(--ink);
+      border-bottom: 1px solid var(--border);
+    }
+    .mm-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: #5e5e5a;
+    }
+    .mm-labels :global(span[data-state='past']) {
+      color: var(--white);
+    }
+    .mm-labels :global(span[data-state='now']) {
+      color: var(--red);
+    }
+    .mm-labels :global(span[hidden]) {
+      display: none;
+    }
+    .mm-track {
+      position: relative;
+      height: 4px;
+      background: var(--charcoal);
+    }
+    .mm-fill {
+      width: 0;
+      height: 4px;
+      background: var(--red);
+    }
+    .mm-knob {
+      position: absolute;
+      left: -7px;
+      top: -5px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--red);
+      box-shadow: 0 0 0 3px var(--ink);
+    }
+    .body {
+      padding-top: 32px;
+      padding-bottom: 40px;
+    }
+    .meter {
+      display: none;
+    }
+    .main {
+      flex-basis: 100%;
+    }
+    .way-out {
+      margin-top: 48px;
+    }
+    .way-out h2 {
+      font-size: 34px;
+      margin-bottom: 14px;
+    }
+    .wo-label {
+      font-size: 11px;
+      margin-bottom: 8px;
+    }
+    .next {
+      display: block;
+    }
+    .nx {
+      display: block;
+      padding: 18px 0 0;
+    }
+    .nl {
+      font-size: 11px;
+      margin-bottom: 10px;
+    }
+    .nt {
+      font-size: 32px;
+      line-height: 0.95;
+      letter-spacing: -0.045em;
+    }
+    .reply {
+      padding: 24px 0 24px;
+    }
+    .reply .btn {
+      align-self: stretch;
+      min-height: 52px;
+    }
+    .sub-link {
+      text-align: center;
+    }
+  }
+</style>

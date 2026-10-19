@@ -1,0 +1,76 @@
+---
+# AI EXPERIMENT TEMPLATE
+# 1. Copy this file, rename it (for example note-taking-tools.mdx) and drop the underscore.
+# 2. The address will be /experiments/<file name>/
+# 3. Every block below is optional. Leave a field out and its block disappears from the page.
+title: '[Experiment title]'
+description: '[Standfirst: why you ran this experiment and what you hoped to learn.]'
+pubDate: 'Oct 20 2026'
+stream: 'AI Journey'
+format: 'Experiment'
+topic: '[Tools]'             # Tools, Builds, Summaries ...
+exp: 2                       # shows as Exp. 002. Use the next number.
+status: 'Running'            # Running while you test, Done when finished
+tags: ['ai', 'tools']
+
+# The experiment card in the red panel
+question: '[What you wanted to find out]'
+hypothesis: '[What you expected to happen]'
+setup: '[How you set it up]'
+tools: ['[Tool A]', '[Tool B]', '[Tool C]']
+duration: '[x days]'
+
+# The lab log (a timeline at the top of the write up). title is optional.
+log:
+  - day: 'Day 1'
+    title: 'The setup'
+    text: '[How you set up the test and what you measured.]'
+  - day: 'Day 3'
+    title: 'First surprise'
+    text: '[What happened that you did not expect.]'
+  - day: 'Day 7'
+    title: 'Where it broke'
+    text: '[What failed, and what you learned from it.]'
+
+# The scorecard. score is out of 5.
+scorecard:
+  - label: '[Tool A]'
+    score: 4
+    note: '[Best for ...]'
+  - label: '[Tool B]'
+    score: 3
+    note: '[Best for ...]'
+
+# The verdict, hidden behind "Reveal the verdict". outcome: Worked, Mixed, Did not work, In progress.
+outcome: 'Worked'
+verdict: '[Winner, and the one line reason why. What you would tell a friend who asked.]'
+
+takeaways:
+  - '[First takeaway]'
+sources:
+  - label: '[Link]'
+    url: 'https://example.com'
+---
+
+import Prompt from '../../components/post/Prompt.astro';
+import KeyIdea from '../../components/post/KeyIdea.astro';
+
+## What I did
+
+[The write up. Plain markdown works here: headings, lists, images, quotes.]
+
+<Prompt label="Prompt I used">
+
+```text
+[Paste the prompt or code snippet here]
+```
+
+</Prompt>
+
+## What I noticed
+
+[Body paragraph.]
+
+<aside class="note"><em>Margin note.</em> [A short aside, shown as a side note.]</aside>
+
+[Body paragraph.]

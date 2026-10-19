@@ -1,0 +1,56 @@
+---
+# RABBIT HOLE TEMPLATE
+# 1. Copy this file, rename it (for example why-we-procrastinate.mdx) and drop the underscore.
+# 2. The address will be /rabbit-holes/<file name>/
+# 3. Words in brackets at the end of the title turn red: 'Why we procrastinate (and what helps)'
+title: '[Rabbit hole title (and the twist)]'
+description: '[One line for lists and share cards.]'
+pubDate: 'Oct 20 2026'
+stream: 'Rabbit Holes'
+topic: 'Mind'                # Mind, History, Money, Productivity or Wildcard
+depth: 2                     # 1 to 3: how deep this one goes
+deepDive: false              # true shows it under "Deepest dives"
+tags: ['psychology']
+
+# The surface: the 30 second version at the top. One item shows as a paragraph, several as bullets.
+# Leave it out and the description is used instead.
+surface:
+  - '[Your TL;DR. Two or three sentences that give the whole answer for anyone who does not want to go down the hole.]'
+
+# "Climbing back out": the practical bit at the end. "Short on time?" jumps straight here.
+takeaways:
+  - '[Practical thing to try]'
+  - '[Practical thing to try]'
+  - '[Practical thing to try]'
+
+# "Want to go even deeper?"
+sources:
+  - label: '[Book or paper]'
+    url: 'https://example.com'
+  - label: '[Article or video]'
+    url: 'https://example.com'
+---
+
+import Level from '../../components/post/Level.astro';
+import KeyIdea from '../../components/post/KeyIdea.astro';
+import PullQuote from '../../components/post/PullQuote.astro';
+
+<Level n={1} title="The obvious answer" />
+
+[What most people think is going on. Set up the common explanation.]
+
+[Body paragraph.]
+
+<Level n={2} title="What the research says" />
+
+[Where the story gets more interesting. Studies, history, surprising detail.]
+
+<KeyIdea label="Huh, interesting" variant="outline">[A surprising fact you found along the way.]</KeyIdea>
+
+[Body paragraph.]
+
+<Level n={3} title="The real reason" />
+
+[The deepest insight. The bit that changed how you think about it.]
+
+<PullQuote>[A line worth remembering.]</PullQuote>

@@ -1,63 +1,29 @@
-# Astro Starter Kit: Blog
+# Curious Ankit
 
-```sh
-npm create astro@latest -- --template blog
+Notes from an endlessly curious mind. Built with Astro, hosted on Cloudflare (Workers static assets), deployed from `main`.
+
+## Run it
+
+```
+npm install
+astro dev --background   # http://localhost:4321
+npm run build            # output in ./dist
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Writing a post
 
-Features:
+Copy one of the templates in `src/content/blog/`, rename it without the leading underscore, and fill it in:
 
-- ✅ Minimal styling (make it your own!)
-- ✅ 100/100 Lighthouse performance
-- ✅ SEO-friendly with canonical URLs and Open Graph data
-- ✅ Sitemap support
-- ✅ RSS Feed support
-- ✅ Markdown & MDX support
+| Template | Stream | Address |
+| --- | --- | --- |
+| `_template-ai-note.mdx` | AI Journey, Note | `/notes/<file-name>/` |
+| `_template-experiment.mdx` | AI Journey, Experiment (numbered Exp. 001 …) | `/experiments/<file-name>/` |
+| `_template-rabbit-hole.mdx` | Rabbit Holes (Mind, History, Money, Productivity, Wildcard) | `/rabbit-holes/<file-name>/` |
 
-## 🚀 Project Structure
+Every field is explained inside the template. Files that start with `_` are never published.
 
-Inside of your Astro project, you'll see the following folders and files:
+## Everything else you can edit
 
-```text
-├── public/
-├── src/
-│   ├── assets/
-│   ├── components/
-│   ├── content/
-│   ├── layouts/
-│   └── pages/
-├── astro.config.mjs
-├── README.md
-├── package.json
-└── tsconfig.json
-```
-
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
-
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
-
-The `src/content/` directory contains "collections" of related Markdown and MDX documents. Use `getCollection()` to retrieve posts from `src/content/blog/`, and type-check your frontmatter using an optional schema. See [Astro's Content Collections docs](https://docs.astro.build/en/guides/content-collections/) to learn more.
-
-Any static assets, like images, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Check out [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
-
-## Credit
-
-This theme is based off of the lovely [Bear Blog](https://github.com/HermanMartinus/bearblog/).
+- `src/consts.ts`: navigation, links (add LinkedIn here), the "Currently curious about" ticker, the newsletter form address.
+- `src/data/shelf.ts`: the books, movies and series on the Shelf page.
+- `src/styles/global.css`: brand colours and fonts.

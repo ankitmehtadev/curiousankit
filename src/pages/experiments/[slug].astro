@@ -1,0 +1,29 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import ExperimentLayout from '../../layouts/ExperimentLayout.astro';
+import { isExperiment } from '../../utils';
+
+// One page per experiment, at /experiments/<slug>/. Previous and next follow the Exp. numbers.
+export async function getStaticPaths() {
+  const exps = (await getCollection('blog'))
+    .filter(isExperiment)
+    .sort((a, b) => (a.data.exp ?? 0) - (b.data.exp ?? 0) || a.data.pubDate.valueOf() - b.data.pubDate.valueOf());
+  return exps.map((note, i) => ({
+    params: { slug: note.id },
+    props: { note, prev: exps[i - 1], next: exps[i + 1] },
+  }));
+}
+
+type Props = {
+  note: CollectionEntry<'blog'>;
+  prev?: CollectionEntry<'blog'>;
+  next?: CollectionEntry<'blog'>;
+};
+
+const { note, prev, next } = Astro.props;
+const { Content } = await render(note);
+---
+
+<ExperimentLayout note={note} prev={prev} next={next}>
+  <Content />
+</ExperimentLayout>

@@ -1,0 +1,654 @@
+---
+// AI Journey experiment: the lab notebook. A sticky red panel holds the experiment card;
+// the log, the write up, the scorecard and the verdict run beside it.
+// Every block hides itself when its frontmatter is empty.
+import Base from './Base.astro';
+import PostScripts from '../components/post/PostScripts.astro';
+import PrevNext from '../components/post/PrevNext.astro';
+import Sources from '../components/post/Sources.astro';
+import Takeaways from '../components/post/Takeaways.astro';
+import { LINKS, SITE_TITLE } from '../consts';
+import { expLabel, formatDate, isoDate, noteUrl, sectionOf, type Note } from '../utils';
+import '../styles/prose.css';
+
+interface Props {
+  note: Note;
+  prev?: Note;
+  next?: Note;
+}
+
+const { note, prev, next } = Astro.props;
+const d = note.data;
+const num = String(d.exp ?? 0).padStart(3, '0');
+
+const card = [
+  ['Question', d.question],
+  ['Hypothesis', d.hypothesis],
+  ['Setup', d.setup],
+  ['Tools', d.tools.length ? d.tools.join(', ') : undefined],
+  ['Time spent', d.duration],
+  ['Status', d.status],
+].filter((row): row is [string, string] => Boolean(row[1]));
+
+const hasVerdict = Boolean(d.outcome || d.verdict);
+const verdictBig = d.outcome ? `${d.outcome}.` : d.verdict;
+const verdictSmall = d.outcome ? d.verdict : undefined;
+const mailto = `mailto:${LINKS.email}?subject=${encodeURIComponent('Re: ' + expLabel(d.exp) + ' ' + d.title)}`;
+---
+
+<Base title={`${expLabel(d.exp)}: ${d.title} | ${SITE_TITLE}`} description={d.description} image={`/og/${sectionOf(note)}/${note.id}.png`}>
+  <article class="exp" data-exp-page>
+    <aside class="panel wrap">
+      <div class="p-top">
+        <span>AI Journey · Experiment</span>
+        {d.status && <span class="badge"><span class:list={['dot', { live: d.status === 'Running' }]}>●</span> {d.status}</span>}
+      </div>
+      <div>
+        <div class="p-date">Exp. · <time datetime={isoDate(d.pubDate)}>{formatDate(d.pubDate)}</time></div>
+        <div class="num" aria-label={expLabel(d.exp)}>{num}</div>
+      </div>
+      <h1>{d.title}</h1>
+      {
+        card.length > 0 && (
+          <dl class="card">
+            {card.map(([k, v]) => (
+              <>
+                <dt>{k}</dt>
+                <dd>{v}</dd>
+              </>
+            ))}
+          </dl>
+        )
+      }
+      <div class="p-foot">
+        <div class="read-row"><span>Read</span><span data-pct>0%</span></div>
+        <div class="read-track"><div class="read-bar" data-read></div></div>
+        {hasVerdict && <a class="skip-link" href="#verdict">Skip to the verdict ↓</a>}
+      </div>
+    </aside>
+
+    <div class="mobile-progress" aria-hidden="true"><div class="read-bar" data-read></div></div>
+
+    <div class="content">
+      <div class="col">
+        <p class="standfirst">{d.description}</p>
+
+        {
+          d.log.length > 0 && (
+            <ol class="log" aria-label="Lab log">
+              {d.log.map((e) => (
+                <li>
+                  <span class="pin" aria-hidden="true" />
+                  <div class="when">{e.day}</div>
+                  {e.title && <h2>{e.title}</h2>}
+                  <p>{e.text}</p>
+                </li>
+              ))}
+            </ol>
+          )
+        }
+
+        <div class="prose">
+          <slot />
+        </div>
+
+        {
+          d.scorecard.length > 0 && (
+            <section class="score" aria-labelledby="score-title">
+              <h2 id="score-title">The scorecard</h2>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Tested</th>
+                      <th>Notes</th>
+                      <th class="r">Score</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {d.scorecard.map((r) => (
+                      <tr>
+                        <td class="item">{r.label}</td>
+                        <td class="note-cell">{r.note}</td>
+                        <td class="r pts">{r.score}/5</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )
+        }
+
+        {
+          hasVerdict && (
+            <section id="verdict" class="verdict" aria-label="Verdict">
+              <button type="button" class="reveal" data-reveal aria-expanded="false" aria-controls="verdict-card">
+                <span class="mono">Spoiler alert</span>
+                <span class="reveal-cta">Reveal the verdict →</span>
+              </button>
+              <div id="verdict-card" class="v-card" hidden>
+                <span class="mono red">The verdict</span>
+                <span class="v-big">{verdictBig}</span>
+                {verdictSmall && <span class="v-small">{verdictSmall}</span>}
+              </div>
+            </section>
+          )
+        }
+
+        <Takeaways items={d.takeaways} />
+        <Sources sources={d.sources} label="Links and sources" />
+      </div>
+    </div>
+  </article>
+
+  <div class="wrap">
+    <PrevNext
+      prev={prev && { label: expLabel(prev.data.exp), title: prev.data.title, href: noteUrl(prev) }}
+      next={next && { label: expLabel(next.data.exp), title: next.data.title, href: noteUrl(next) }}
+    />
+    <div class="reply-row">
+      <a class="btn" href={mailto}>Reply by email →</a>
+      <a class="mono sub-link" href="/subscribe/">Subscribe for the next experiment</a>
+    </div>
+  </div>
+
+  <PostScripts />
+</Base>
+
+<script>
+  const bars = document.querySelectorAll<HTMLElement>('[data-read]');
+  const pct = document.querySelector<HTMLElement>('[data-pct]');
+  function update() {
+    const el = document.documentElement;
+    const max = el.scrollHeight - el.clientHeight;
+    const p = max > 0 ? Math.min(100, Math.round((el.scrollTop / max) * 100)) : 0;
+    bars.forEach((b) => (b.style.width = `${p}%`));
+    if (pct) pct.textContent = `${p}%`;
+  }
+  addEventListener('scroll', update, { passive: true });
+  addEventListener('resize', update);
+  update();
+
+  const reveal = document.querySelector<HTMLButtonElement>('[data-reveal]');
+  const card = document.getElementById('verdict-card');
+  function show() {
+    if (!reveal || !card) return;
+    reveal.hidden = true;
+    reveal.setAttribute('aria-expanded', 'true');
+    card.hidden = false;
+  }
+  reveal?.addEventListener('click', show);
+  document.querySelector('.skip-link')?.addEventListener('click', show);
+</script>
+
+<style>
+  /* On phones the header sits on the red panel, as in the design. */
+  @media (max-width: 899px) {
+    :global(body:has([data-exp-page]) .site-header) {
+      background: var(--red);
+    }
+    :global(body:has([data-exp-page]) .site-header .lens) {
+      border-color: var(--white);
+    }
+    :global(body:has([data-exp-page]) .site-header .handle) {
+      background: var(--white);
+    }
+    :global(body:has([data-exp-page]) .site-header .open) {
+      background: var(--ink);
+    }
+  }
+
+  .exp {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  .panel {
+    flex: 1 1 440px;
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    min-height: 100vh;
+    padding-top: 40px;
+    padding-bottom: 40px;
+    background: var(--red);
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  .p-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+  .badge {
+    padding: 4px 10px;
+    background: var(--ink);
+    white-space: nowrap;
+  }
+  .dot.live {
+    color: var(--red);
+    animation: blink 1.4s ease-in-out infinite;
+  }
+  @keyframes blink {
+    50% {
+      opacity: 0.25;
+    }
+  }
+  .p-date {
+    margin-bottom: 6px;
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+  .num {
+    font-weight: 800;
+    font-size: clamp(120px, 12vw, 200px);
+    line-height: 0.75;
+    letter-spacing: -0.07em;
+  }
+  h1 {
+    font-size: clamp(40px, 3.6vw, 60px);
+    line-height: 0.9;
+    letter-spacing: -0.05em;
+  }
+  .card {
+    margin: 0;
+    background: var(--white);
+    color: var(--ink);
+    display: grid;
+    grid-template-columns: 120px minmax(0, 1fr);
+  }
+  .card dt,
+  .card dd {
+    padding: 12px 16px;
+    border-bottom: 1px solid #e4e4e0;
+  }
+  .card dt:last-of-type,
+  .card dd:last-of-type {
+    border-bottom: 0;
+  }
+  .card dt {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: #5e5e5a;
+  }
+  .card dd {
+    margin: 0;
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 1.4;
+  }
+  .p-foot {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .read-row {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  .read-track {
+    height: 6px;
+    background: rgba(0, 0, 0, 0.25);
+  }
+  .read-track .read-bar {
+    width: 0;
+    height: 6px;
+    background: var(--ink);
+  }
+  .skip-link {
+    margin-top: 8px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--white);
+  }
+  .skip-link:hover {
+    color: var(--ink);
+  }
+  .mobile-progress {
+    display: none;
+  }
+
+  .content {
+    flex: 2 1 560px;
+    min-width: 0;
+    padding: 40px clamp(16px, 4vw, 72px) 96px;
+  }
+  .col {
+    max-width: 720px;
+  }
+  .standfirst {
+    margin-bottom: 40px;
+    font-size: 24px;
+    line-height: 1.45;
+    color: var(--white);
+  }
+
+  .log {
+    margin: 0 0 16px;
+    padding: 0 0 0 28px;
+    list-style: none;
+    border-left: 2px solid var(--border);
+    font-size: 20px;
+    line-height: 1.7;
+    color: var(--body);
+  }
+  .log li {
+    position: relative;
+    padding-bottom: 48px;
+  }
+  .log li:last-child {
+    padding-bottom: 8px;
+  }
+  .pin {
+    position: absolute;
+    left: -37px;
+    top: 6px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--red);
+    box-shadow: 0 0 0 4px var(--ink);
+  }
+  .when {
+    margin-bottom: 8px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--red);
+  }
+  .log h2 {
+    margin-bottom: 14px;
+    font-size: 36px;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+  }
+  .log + .prose {
+    margin-top: 48px;
+  }
+
+  .score {
+    margin: 56px 0;
+  }
+  .score h2 {
+    margin-bottom: 20px;
+    font-size: 44px;
+    line-height: 0.95;
+  }
+  .table-wrap {
+    overflow-x: auto;
+  }
+  table {
+    width: 100%;
+    min-width: 480px;
+    border-collapse: collapse;
+    font-size: 16px;
+    color: var(--body);
+  }
+  th {
+    padding: 10px 12px 10px 0;
+    border-bottom: 1px solid var(--white);
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--smoke);
+    text-align: left;
+  }
+  td {
+    padding: 14px 12px 14px 0;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .r {
+    text-align: right;
+    padding-right: 0;
+  }
+  .item {
+    font-weight: 800;
+    color: var(--white);
+  }
+  .pts {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--red);
+    white-space: nowrap;
+  }
+
+  .verdict {
+    margin-top: 56px;
+    scroll-margin-top: 24px;
+  }
+  .reveal {
+    width: 100%;
+    min-height: 200px;
+    padding: 32px;
+    border: 0;
+    background: var(--red);
+    color: var(--white);
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 24px;
+    transition: background 0.2s;
+  }
+  .reveal[hidden] {
+    display: none;
+  }
+  .reveal:hover {
+    background: var(--red-deep);
+  }
+  .reveal .mono {
+    font-size: 13px;
+  }
+  .reveal-cta,
+  .v-big {
+    font-weight: 800;
+    font-size: 44px;
+    line-height: 0.95;
+    letter-spacing: -0.045em;
+  }
+  .v-card {
+    padding: 32px;
+    background: var(--white);
+    color: var(--ink);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    animation: pop 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .v-card[hidden] {
+    display: none;
+  }
+  .v-card .mono {
+    font-size: 13px;
+  }
+  .v-small {
+    font-size: 18px;
+    line-height: 1.5;
+  }
+  @keyframes pop {
+    from {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .reply-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px 28px;
+    padding: 0 0 64px;
+  }
+  .sub-link {
+    font-size: 13px;
+  }
+  .sub-link:hover {
+    color: var(--red);
+  }
+
+  @media (max-width: 899px) {
+    .exp {
+      display: block;
+    }
+    .panel {
+      position: static;
+      min-height: 0;
+      padding-top: 8px;
+      padding-bottom: 24px;
+      gap: 0;
+    }
+    .p-top {
+      margin-bottom: 14px;
+      font-size: 11px;
+    }
+    .badge {
+      padding: 4px 8px;
+    }
+    .p-date {
+      margin-bottom: 4px;
+      font-size: 11px;
+    }
+    .num {
+      font-size: 120px;
+      line-height: 0.76;
+    }
+    h1 {
+      margin: 18px 0 20px;
+      font-size: 40px;
+    }
+    .card {
+      grid-template-columns: 96px minmax(0, 1fr);
+      font-size: 14px;
+    }
+    .card dt,
+    .card dd {
+      padding: 10px 12px;
+    }
+    .card dt {
+      font-size: 11px;
+    }
+    .card dd {
+      font-size: 14px;
+    }
+    .read-row,
+    .read-track {
+      display: none;
+    }
+    .p-foot {
+      margin-top: 16px;
+    }
+    .skip-link {
+      margin-top: 0;
+      font-size: 12px;
+    }
+    .mobile-progress {
+      display: block;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      height: 4px;
+      background: var(--grid);
+    }
+    .mobile-progress .read-bar {
+      width: 0;
+      height: 4px;
+      background: var(--red);
+    }
+    .content {
+      padding: 32px var(--gutter) 40px;
+    }
+    .standfirst {
+      margin-bottom: 32px;
+      font-size: 20px;
+    }
+    .log {
+      padding-left: 22px;
+      font-size: 18px;
+    }
+    .log li {
+      padding-bottom: 32px;
+    }
+    .pin {
+      left: -30px;
+      width: 14px;
+      height: 14px;
+    }
+    .when {
+      font-size: 11px;
+      margin-bottom: 6px;
+    }
+    .log h2 {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+    .score {
+      margin: 40px 0;
+    }
+    .score h2 {
+      font-size: 34px;
+      margin-bottom: 14px;
+    }
+    table {
+      min-width: 0;
+      font-size: 15px;
+    }
+    thead {
+      display: none;
+    }
+    tbody tr:first-child td {
+      border-top: 1px solid var(--white);
+    }
+    td {
+      padding: 12px 8px 12px 0;
+    }
+    .note-cell {
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .pts {
+      font-size: 12px;
+    }
+    .verdict {
+      margin-top: 40px;
+    }
+    .reveal {
+      min-height: 160px;
+      padding: 24px;
+      gap: 16px;
+    }
+    .reveal .mono,
+    .v-card .mono {
+      font-size: 12px;
+    }
+    .reveal-cta,
+    .v-big {
+      font-size: 34px;
+    }
+    .v-card {
+      padding: 24px;
+    }
+    .reply-row {
+      flex-direction: column;
+      align-items: stretch;
+      padding: 24px 0 40px;
+    }
+    .reply-row .btn {
+      min-height: 52px;
+    }
+    .sub-link {
+      text-align: center;
+    }
+  }
+</style>
