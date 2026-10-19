@@ -1,8 +1,5 @@
 // The Shelf: books I have read and movies and series I have watched, all recommended.
 //
-// IMPORTANT: apart from Superintelligence (which I am reading now), the entries below are
-// STAND INS copied from the design mock up. Replace them with your own list before going live.
-//
 // How to add an entry
 //   type      'Book', 'Movie' or 'Series'
 //   title     the name
@@ -27,22 +24,27 @@ export type ShelfItem = {
 };
 
 export const SHELF: ShelfItem[] = [
+  { type: 'Book', title: "Poor Charlie's Almanack", by: 'Charles T. Munger', genres: ['Money'], reading: true },
   { type: 'Book', title: 'Superintelligence: Paths, Dangers, Strategies', by: 'Nick Bostrom', genres: ['AI and Tech'], reading: true },
+  { type: 'Movie', title: 'The Godfather', by: 'Francis Ford Coppola', genres: ['Crime', 'Drama'], language: 'English' },
   { type: 'Book', title: 'Sapiens', by: 'Yuval Noah Harari', genres: ['History'] },
-  { type: 'Movie', title: 'Parasite', by: 'Bong Joon Ho', genres: ['Thriller'], language: 'Korean' },
-  { type: 'Book', title: 'Atomic Habits', by: 'James Clear', genres: ['Productivity'] },
-  { type: 'Series', title: 'Panchayat', by: 'TVF', genres: ['Comedy'], language: 'Hindi' },
-  { type: 'Book', title: 'Thinking, Fast and Slow', by: 'Daniel Kahneman', genres: ['Psychology'] },
-  { type: 'Movie', title: 'Spirited Away', by: 'Hayao Miyazaki', genres: ['Animation'], language: 'Japanese' },
-  { type: 'Book', title: 'The Psychology of Money', by: 'Morgan Housel', genres: ['Money'] },
-  { type: 'Series', title: 'Dark', by: 'Baran bo Odar, Jantje Friese', genres: ['Sci fi'], language: 'German' },
-  { type: 'Movie', title: '3 Idiots', by: 'Rajkumar Hirani', genres: ['Comedy'], language: 'Hindi' },
-  { type: 'Book', title: 'The Alignment Problem', by: 'Brian Christian', genres: ['AI and Tech'] },
-  { type: 'Series', title: 'Money Heist', by: 'Álex Pina', genres: ['Thriller'], language: 'Spanish' },
-  { type: 'Book', title: 'Deep Work', by: 'Cal Newport', genres: ['Productivity'] },
-  { type: 'Movie', title: 'Interstellar', by: 'Christopher Nolan', genres: ['Sci fi'], language: 'English' },
-  { type: 'Book', title: 'Guns, Germs, and Steel', by: 'Jared Diamond', genres: ['History'] },
-  { type: 'Series', title: 'Chernobyl', by: 'Craig Mazin', genres: ['Drama'], language: 'English' },
-  { type: 'Book', title: 'Project Hail Mary', by: 'Andy Weir', genres: ['Fiction'] },
-  { type: 'Series', title: 'The Office', by: 'Greg Daniels', genres: ['Comedy'], language: 'English' },
+  { type: 'Series', title: 'Scam 1992: The Harshad Mehta Story', by: 'Hansal Mehta', genres: ['Biography', 'Drama'], language: 'Hindi' },
+  { type: 'Movie', title: 'Gangs of Wasseypur', by: 'Anurag Kashyap', genres: ['Crime', 'Action'], language: 'Hindi' },
+  { type: 'Book', title: 'Freakonomics', by: 'Steven D. Levitt and Stephen J. Dubner', genres: ['Money'] },
+  { type: 'Series', title: 'Chernobyl', by: 'Craig Mazin', genres: ['Drama', 'History'], language: 'English' },
+  { type: 'Movie', title: 'Saving Private Ryan', by: 'Steven Spielberg', genres: ['War', 'Action'], language: 'English' },
+  { type: 'Book', title: 'One Hundred Years of Solitude', by: 'Gabriel García Márquez', genres: ['Fiction'] },
+  { type: 'Movie', title: 'Andhadhun', by: 'Sriram Raghavan', genres: ['Crime', 'Thriller'], language: 'Hindi' },
+  { type: 'Series', title: 'Freedom at Midnight', by: 'Nikkhil Advani', genres: ['History', 'Drama', 'Thriller'], language: 'Hindi' },
+  { type: 'Book', title: 'The Anarchy: The Relentless Rise of the East India Company', by: 'William Dalrymple', genres: ['History'] },
+  { type: 'Movie', title: 'The Pianist', by: 'Roman Polanski', genres: ['War', 'Drama'], language: 'English' },
+  { type: 'Movie', title: 'Rang De Basanti', by: 'Rakeysh Omprakash Mehra', genres: ['Action', 'Thriller'], language: 'Hindi' },
+  { type: 'Series', title: 'Modern Family', by: 'Christopher Lloyd and Steven Levitan', genres: ['Comedy'], language: 'English' },
+  { type: 'Book', title: 'A Short History of Nearly Everything', by: 'Bill Bryson', genres: ['Science'] },
+  { type: 'Movie', title: 'The Bridge on the River Kwai', by: 'David Lean', genres: ['War', 'Adventure'], language: 'English' },
+  { type: 'Movie', title: 'Udaan', by: 'Vikramaditya Motwane', genres: ['Drama'], language: 'Hindi' },
+  { type: 'Series', title: 'Made in India: A Titan Story', by: 'Robbie Grewal', genres: ['Biography', 'Drama'], language: 'Hindi' },
+  { type: 'Book', title: 'Treasure Island', by: 'Robert Louis Stevenson', genres: ['Fiction', 'Adventure'] },
+  { type: 'Movie', title: "The King's Speech", by: 'Tom Hooper', genres: ['Drama', 'Biography'], language: 'English' },
+  { type: 'Movie', title: 'F1', by: 'Joseph Kosinski', genres: ['Sport', 'Action'], language: 'English' },
 ];
