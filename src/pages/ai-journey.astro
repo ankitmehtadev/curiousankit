@@ -1,0 +1,666 @@
+---
+import { getCollection } from 'astro:content';
+import Subscribe from '../components/Subscribe.astro';
+import Base from '../layouts/Base.astro';
+import { SITE_TITLE } from '../consts';
+import { expLabel, formatDate, isAINote, isExperiment, noteUrl, sortNotes } from '../utils';
+
+const all = sortNotes((await getCollection('blog')).filter((n) => n.data.stream === 'AI Journey'));
+const notes = all.filter(isAINote);
+const exps = all.filter(isExperiment);
+const running = exps.filter((e) => e.data.status === 'Running');
+const lab = [...exps].sort((a, b) => (a.data.exp ?? 0) - (b.data.exp ?? 0));
+const maxN = exps.reduce((m, e) => Math.max(m, e.data.exp ?? 0), 0);
+const nextN = String(maxN + 1).padStart(3, '0');
+
+const fmtOf = (n: (typeof all)[number]) => (isExperiment(n) ? 'Experiments' : 'Notes');
+const topics = Array.from(new Set(all.map((n) => n.data.topic)));
+const topicFormats = (t: string) => Array.from(new Set(all.filter((n) => n.data.topic === t).map(fmtOf))).join(' ');
+
+const fmts = [
+  { label: 'All', count: all.length },
+  { label: 'Notes', count: notes.length },
+  { label: 'Experiments', count: exps.length },
+];
+
+const intro =
+  "Notes on what I'm learning, and numbered experiments where I try, break and build things with AI. Honest results included.";
+---
+
+<Base title={`AI Journey | ${SITE_TITLE}`} description={intro}>
+  <section class="hero wrap" data-hero="red">
+    <div class="hero-in">
+      <div class="lead">
+        <div class="mono kicker">Stream 01</div>
+        <h1>AI Journey</h1>
+        <p class="intro">{intro}</p>
+      </div>
+      <div class="counts">
+        <div><div class="num">{notes.length}</div><div class="mono cap">Notes</div></div>
+        <div><div class="num">{exps.length}</div><div class="mono cap">Experiments</div></div>
+        <div><div class="num dark">{running.length}</div><div class="mono cap">Running now</div></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <section class="lab" aria-labelledby="lab">
+      <div class="sec-head">
+        <div>
+          <div class="mono eyebrow">The lab shelf<span class="swipe"> · swipe →</span></div>
+          <h2 id="lab">Every experiment, numbered.</h2>
+        </div>
+        <span class="mono eyebrow desk-only">Oldest to newest →</span>
+      </div>
+      <div class="shelf">
+        {
+          lab.map((e) => {
+            const run = e.data.status === 'Running';
+            return (
+              <a href={noteUrl(e)} class="exp">
+                <span class="exp-top mono">
+                  <span class="dim">Exp.</span>
+                  <span class:list={['badge', run ? 'run' : 'done']}>
+                    <span class:list={['dot', run && 'live']} />
+                    {e.data.status ?? 'Done'}
+                  </span>
+                </span>
+                <span class="exp-n">{String(e.data.exp ?? 0).padStart(3, '0')}</span>
+                <span class="exp-t">{e.data.title}</span>
+                <span class="mono exp-m">
+                  {e.data.topic} · {formatDate(e.data.pubDate)}
+                </span>
+              </a>
+            );
+          })
+        }
+        <div class="exp next">
+          <span class="mono">Exp. · Up next</span>
+          <span class="exp-n">{nextN}</span>
+          <span class="exp-t">[Your next experiment idea]</span>
+          <a href="/contact/" class="mono suggest">Suggest an experiment →</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="everything" aria-labelledby="all">
+      <div class="sec-head">
+        <h2 id="all">Everything AI</h2>
+        <div class="fmt" role="group" aria-label="Filter by format">
+          {
+            fmts.map((f, i) => (
+              <button type="button" data-fmt={f.label} aria-pressed={i === 0 ? 'true' : 'false'}>
+                {f.label} <span class="cnt">{f.count}</span>
+              </button>
+            ))
+          }
+        </div>
+      </div>
+      {
+        topics.length > 1 && (
+          <div class="topics" role="group" aria-label="Filter by topic">
+            <button type="button" class="chip" data-topic="All" aria-pressed="true">All</button>
+            {topics.map((t) => (
+              <button type="button" class="chip" data-topic={t} data-formats={topicFormats(t)} aria-pressed="false">
+                {t}
+              </button>
+            ))}
+          </div>
+        )
+      }
+      <div class="list">
+        {
+          all.map((n) => {
+            const x = isExperiment(n);
+            return (
+              <a href={noteUrl(n)} class="row" data-fmt={fmtOf(n)} data-topic={n.data.topic}>
+                <span class="mono date">{formatDate(n.data.pubDate)}</span>
+                <span class="rt">{n.data.title}</span>
+                <span class="mono meta">
+                  <span class:list={['flabel', x && 'isexp']}>
+                    {x ? `${expLabel(n.data.exp)}${n.data.status ? ' · ' + n.data.status : ''}` : 'Note'}
+                  </span>
+                  <span class="topic">{n.data.topic}</span>
+                </span>
+                <span class="ra" aria-hidden="true">→</span>
+              </a>
+            );
+          })
+        }
+        <p class="empty" hidden={all.length > 0}>
+          Nothing here yet. The first one is brewing. <a href="/subscribe/">Get it first →</a>
+        </p>
+      </div>
+      <div class="more"><a href="/archive/" class="mono">See every note in the Archive →</a></div>
+    </section>
+
+    <Subscribe id="subscribe-ai" pitch="Get each experiment's verdict" accent="first." />
+  </div>
+</Base>
+
+<script>
+  const fmtButtons = document.querySelectorAll<HTMLButtonElement>('.fmt button');
+  const topicButtons = document.querySelectorAll<HTMLButtonElement>('.topics .chip');
+  const rows = document.querySelectorAll<HTMLElement>('.list .row');
+  const empty = document.querySelector<HTMLElement>('.list .empty');
+  let fmt = 'All';
+  let topic = 'All';
+
+  function apply() {
+    fmtButtons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.fmt === fmt)));
+    topicButtons.forEach((b) => {
+      const t = b.dataset.topic;
+      const fits = t === 'All' || fmt === 'All' || (b.dataset.formats ?? '').split(' ').includes(fmt);
+      b.hidden = !fits;
+      b.setAttribute('aria-pressed', String(t === topic));
+    });
+    let shown = 0;
+    rows.forEach((r) => {
+      const ok = (fmt === 'All' || r.dataset.fmt === fmt) && (topic === 'All' || r.dataset.topic === topic);
+      r.hidden = !ok;
+      if (ok) shown++;
+    });
+    if (empty) empty.hidden = shown > 0;
+  }
+
+  fmtButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      fmt = b.dataset.fmt ?? 'All';
+      topic = 'All';
+      apply();
+    }),
+  );
+  topicButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      topic = b.dataset.topic ?? 'All';
+      apply();
+    }),
+  );
+</script>
+
+<style is:global>
+  /* The site header sits on the red hero on this page. */
+  body:has([data-hero='red']) .site-header {
+    background-color: var(--red);
+  }
+  body:has([data-hero='red']) .site-header .lens {
+    border-color: var(--white);
+  }
+  body:has([data-hero='red']) .site-header .lens .handle {
+    background: var(--white);
+  }
+  body:has([data-hero='red']) .site-header .desk a:hover {
+    color: var(--ink);
+  }
+  body:has([data-hero='red']) .site-header .desk a[aria-current='page'] {
+    padding: 6px 10px;
+    background: var(--ink);
+    color: var(--white);
+  }
+  body:has([data-hero='red']) .site-header .desk .search {
+    border-color: rgba(255, 255, 255, 0.6);
+  }
+  body:has([data-hero='red']) .site-header .desk .search:hover {
+    border-color: var(--white);
+    color: var(--white);
+  }
+  body:has([data-hero='red']) .site-header .desk .sub {
+    background: var(--white);
+    color: var(--ink);
+  }
+  body:has([data-hero='red']) .site-header .desk .sub:hover {
+    background: var(--ink);
+    color: var(--white);
+  }
+  body:has([data-hero='red']) .site-header .open {
+    background: var(--ink);
+  }
+</style>
+
+<style>
+  .hero {
+    background: var(--red);
+    padding-top: 40px;
+    padding-bottom: 56px;
+  }
+  .hero-in {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 32px 0;
+  }
+  .lead {
+    flex: 3 1 600px;
+    padding-right: 32px;
+  }
+  .kicker {
+    font-size: 13px;
+    margin-bottom: 18px;
+  }
+  h1 {
+    font-size: clamp(72px, 10vw, 168px);
+    line-height: 0.84;
+    letter-spacing: -0.06em;
+  }
+  .intro {
+    margin-top: 28px;
+    max-width: 620px;
+    font-size: 22px;
+    line-height: 1.45;
+  }
+  .counts {
+    flex: 2 1 340px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-top: 1px solid rgba(255, 255, 255, 0.6);
+  }
+  .counts > div {
+    padding: 18px 12px 0;
+  }
+  .counts > div:first-child {
+    padding-left: 0;
+  }
+  .num {
+    font-weight: 800;
+    font-size: 64px;
+    line-height: 0.85;
+    letter-spacing: -0.05em;
+  }
+  .num.dark {
+    color: var(--ink);
+  }
+  .cap {
+    margin-top: 8px;
+    font-size: 12px;
+  }
+
+  .sec-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 16px 20px;
+    margin-bottom: 32px;
+  }
+  .eyebrow {
+    font-size: 13px;
+    color: var(--smoke);
+  }
+  .sec-head .eyebrow:not(.desk-only) {
+    margin-bottom: 12px;
+  }
+  .swipe {
+    display: none;
+  }
+  h2 {
+    font-size: clamp(44px, 5vw, 80px);
+    line-height: 0.9;
+    letter-spacing: -0.05em;
+  }
+
+  .lab {
+    padding: 80px 0 96px;
+  }
+  .shelf {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    padding: 12px 4px 16px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .exp {
+    flex: 0 0 300px;
+    min-height: 380px;
+    padding: 24px;
+    background: var(--charcoal);
+    color: var(--white);
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    border-top: 6px solid var(--red);
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.2s;
+  }
+  a.exp:hover {
+    transform: translateY(-8px);
+    background: var(--border);
+  }
+  a.exp:hover .exp-t {
+    color: var(--red);
+  }
+  .exp-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+  }
+  .dim {
+    color: var(--smoke);
+  }
+  .badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 10px;
+  }
+  .badge.done {
+    background: var(--white);
+    color: var(--ink);
+  }
+  .badge.run {
+    background: var(--ink);
+    color: var(--white);
+  }
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--ink);
+  }
+  .badge.run .dot {
+    background: var(--red);
+  }
+  .live {
+    animation: pulse 1.6s infinite;
+  }
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(217, 58, 58, 0.7);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(217, 58, 58, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(217, 58, 58, 0);
+    }
+  }
+  .exp-n {
+    font-weight: 800;
+    font-size: 120px;
+    line-height: 0.78;
+    letter-spacing: -0.07em;
+  }
+  .exp-t {
+    margin-top: auto;
+    font-weight: 800;
+    font-size: 28px;
+    line-height: 0.98;
+    letter-spacing: -0.04em;
+    transition: color 0.2s;
+  }
+  .exp-m {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .exp.next {
+    background: transparent;
+    border: 2px dashed #3a3a3a;
+    color: var(--smoke);
+    font-size: 12px;
+  }
+  .exp.next .exp-n {
+    color: #3a3a3a;
+  }
+  .exp.next .exp-t {
+    font-size: 26px;
+    line-height: 1;
+    color: var(--muted);
+  }
+  .suggest {
+    font-size: 12px;
+    color: var(--white);
+  }
+  .suggest:hover {
+    color: var(--red);
+  }
+
+  .everything {
+    padding-bottom: 120px;
+  }
+  .everything .sec-head {
+    margin-bottom: 24px;
+  }
+  .fmt {
+    display: flex;
+    border: 1px solid var(--white);
+  }
+  .fmt button {
+    min-height: 48px;
+    padding: 0 22px;
+    border: 0;
+    background: transparent;
+    color: var(--white);
+    font-family: var(--mono);
+    font-size: 13px;
+    transition: background 0.2s, color 0.2s;
+  }
+  .fmt button + button {
+    border-left: 1px solid var(--white);
+  }
+  .fmt button[aria-pressed='true'] {
+    background: var(--white);
+    color: var(--ink);
+  }
+  .cnt {
+    opacity: 0.6;
+  }
+  .topics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .topics .chip[hidden] {
+    display: none;
+  }
+  .list {
+    border-top: 1px solid var(--white);
+  }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 0;
+    padding: 24px 0;
+    border-bottom: 1px solid var(--border);
+    color: var(--white);
+    text-decoration: none;
+  }
+  .row[hidden] {
+    display: none;
+  }
+  .date {
+    flex: 0 0 140px;
+    font-size: 13px;
+    color: var(--smoke);
+  }
+  .rt {
+    flex: 999 1 460px;
+    min-width: 0;
+    font-weight: 800;
+    font-size: clamp(28px, 3vw, 46px);
+    line-height: 0.96;
+    letter-spacing: -0.045em;
+    transition: color 0.2s;
+  }
+  .meta {
+    flex: 1 1 260px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+  }
+  .flabel {
+    padding: 4px 10px;
+    border: 1px solid var(--white);
+  }
+  .flabel.isexp {
+    background: var(--red);
+    border-color: var(--red);
+  }
+  .topic {
+    color: var(--muted);
+  }
+  .ra {
+    flex: 0 0 40px;
+    font-size: 26px;
+    text-align: right;
+    transition: transform 0.2s, color 0.2s;
+  }
+  .row:hover .rt,
+  .row:hover .ra {
+    color: var(--red);
+  }
+  .row:hover .ra {
+    transform: translateX(6px);
+  }
+  .empty {
+    padding: 40px 0;
+    font-size: 22px;
+    color: var(--muted);
+  }
+  .empty a {
+    color: var(--white);
+  }
+  .empty a:hover,
+  .more a:hover {
+    color: var(--red);
+  }
+  .more {
+    padding-top: 24px;
+  }
+  .more a {
+    font-size: 13px;
+  }
+
+  @media (max-width: 640px) {
+    .hero {
+      padding-top: 24px;
+      padding-bottom: 32px;
+    }
+    .lead {
+      padding-right: 0;
+    }
+    .kicker {
+      font-size: 12px;
+      margin-bottom: 12px;
+    }
+    h1 {
+      font-size: 68px;
+    }
+    .intro {
+      margin-top: 18px;
+      font-size: 17px;
+    }
+    .counts > div {
+      padding: 14px 0 0;
+    }
+    .num {
+      font-size: 44px;
+    }
+    .cap {
+      margin-top: 6px;
+      font-size: 11px;
+    }
+    h2 {
+      font-size: 40px;
+    }
+    .eyebrow {
+      font-size: 12px;
+    }
+    .swipe {
+      display: inline;
+    }
+    .desk-only {
+      display: none;
+    }
+    .sec-head {
+      margin-bottom: 20px;
+    }
+    .lab {
+      padding: 48px 0 56px;
+    }
+    .shelf {
+      gap: 12px;
+      margin: 0 calc(var(--gutter) * -1);
+      padding: 4px var(--gutter) 8px;
+    }
+    .exp {
+      flex-basis: 250px;
+      min-height: 320px;
+      padding: 18px;
+      gap: 12px;
+    }
+    .exp-n {
+      font-size: 96px;
+    }
+    .exp-t,
+    .exp.next .exp-t {
+      font-size: 24px;
+    }
+    .exp-top,
+    .exp-m {
+      font-size: 11px;
+    }
+    .everything {
+      padding-bottom: 56px;
+    }
+    .everything .sec-head {
+      margin-bottom: 18px;
+    }
+    .fmt {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .fmt button {
+      min-height: 46px;
+      padding: 0 6px;
+      font-size: 12px;
+    }
+    .topics {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      margin: 0 calc(var(--gutter) * -1) 16px;
+      padding: 0 var(--gutter);
+      scrollbar-width: none;
+    }
+    .topics .chip {
+      flex: 0 0 auto;
+    }
+    .row {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+      padding: 18px 0;
+      position: relative;
+    }
+    .date {
+      flex: none;
+      font-size: 11px;
+    }
+    .rt {
+      flex: none;
+      font-size: 26px;
+      line-height: 0.98;
+      letter-spacing: -0.04em;
+      order: 3;
+    }
+    .meta {
+      flex: none;
+      position: absolute;
+      top: 16px;
+      right: 0;
+      font-size: 11px;
+    }
+    .flabel {
+      padding: 2px 8px;
+    }
+    .topic,
+    .ra {
+      display: none;
+    }
+  }
+</style>

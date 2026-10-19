@@ -1,0 +1,426 @@
+---
+// AI Journey note: the classic reading layout with a sticky table of contents.
+import type { MarkdownHeading } from 'astro';
+import Base from './Base.astro';
+import PostScripts from '../components/post/PostScripts.astro';
+import PrevNext from '../components/post/PrevNext.astro';
+import Sources from '../components/post/Sources.astro';
+import Takeaways from '../components/post/Takeaways.astro';
+import { LINKS, SITE_TITLE } from '../consts';
+import { formatDate, isoDate, noteUrl, readingTime, sectionOf, type Note } from '../utils';
+import '../styles/prose.css';
+
+interface Props {
+  note: Note;
+  headings: MarkdownHeading[];
+  prev?: Note;
+  next?: Note;
+}
+
+const { note, headings, prev, next } = Astro.props;
+const d = note.data;
+const sections = headings.filter((h) => h.depth === 2);
+const pad = (i: number) => String(i + 1).padStart(2, '0');
+const minutes = readingTime(note.body);
+const mailto = `mailto:${LINKS.email}?subject=${encodeURIComponent('Re: ' + d.title)}`;
+---
+
+<Base title={`${d.title} | ${SITE_TITLE}`} description={d.description} image={`/og/${sectionOf(note)}/${note.id}.png`}>
+  <div slot="top" class="progress" aria-hidden="true"><div class="bar" data-progress></div></div>
+
+  <article class="note wrap">
+    <header class="hero">
+      <div class="meta">
+        <span class="tag-red">AI Journey · Note</span>
+        <span class="topic">{d.topic}</span>
+        <time datetime={isoDate(d.pubDate)}>{formatDate(d.pubDate)}</time>
+        <span>{minutes} min read</span>
+      </div>
+      <h1>{d.title}</h1>
+      <p class="standfirst">{d.description}</p>
+    </header>
+
+    {
+      sections.length > 0 && (
+        <details class="toc-mobile">
+          <summary>
+            <span>In this note · {sections.length} {sections.length === 1 ? 'section' : 'sections'}</span>
+            <span class="chev" aria-hidden="true">▾</span>
+          </summary>
+          <ol>
+            {sections.map((h, i) => (
+              <li>
+                <a href={`#${h.slug}`}>
+                  {pad(i)} · {h.text}
+                </a>
+              </li>
+            ))}
+          </ol>
+        </details>
+      )
+    }
+
+    <div class="layout">
+      <aside class="side">
+        <div class="side-inner">
+          {
+            sections.length > 0 && (
+              <nav class="toc" aria-label="In this note">
+                <div class="toc-title">In this note</div>
+                {sections.map((h, i) => (
+                  <div>
+                    <a href={`#${h.slug}`}>
+                      {pad(i)} · {h.text}
+                    </a>
+                  </div>
+                ))}
+              </nav>
+            )
+          }
+          <div class="share">
+            <span>Share</span>
+            <button type="button" class="copy-link" data-copy-link>Copy link</button>
+          </div>
+        </div>
+      </aside>
+
+      <div class="main">
+        <div class="prose numbered">
+          <slot />
+        </div>
+
+        <Takeaways items={d.takeaways} />
+        <Sources sources={d.sources} numbered id="sources" />
+
+        {
+          d.tags.length > 0 && (
+            <div class="tags">
+              {d.tags.map((t) => (
+                <span>#{t.toLowerCase().replace(/\s+/g, '')}</span>
+              ))}
+            </div>
+          )
+        }
+      </div>
+    </div>
+  </article>
+
+  <div class="wrap">
+    <PrevNext
+      prev={prev && { label: 'Previous AI note', title: prev.data.title, href: noteUrl(prev) }}
+      next={next && { label: 'Next AI note', title: next.data.title, href: noteUrl(next) }}
+    />
+
+    <section class="reply" aria-label="Reply">
+      <div class="r-red">
+        <span class="mono small">Got thoughts?</span>
+        <span class="big">Reply to this note. I read everything.</span>
+        <a class="r-btn dark" href={mailto}>Reply by email →</a>
+      </div>
+      <div class="r-white">
+        <span class="mono small">Notes by email</span>
+        <span class="big">Get the next one in your inbox.</span>
+        <a class="r-btn red" href="/subscribe/">Subscribe →</a>
+      </div>
+    </section>
+  </div>
+
+  <PostScripts />
+</Base>
+
+<script>
+  const bar = document.querySelector<HTMLElement>('[data-progress]');
+  function update() {
+    const el = document.documentElement;
+    const max = el.scrollHeight - el.clientHeight;
+    const p = max > 0 ? Math.min(100, (el.scrollTop / max) * 100) : 0;
+    if (bar) bar.style.width = `${p}%`;
+  }
+  addEventListener('scroll', update, { passive: true });
+  addEventListener('resize', update);
+  update();
+
+  // Close the phone contents list after a jump.
+  document.querySelectorAll<HTMLAnchorElement>('.toc-mobile a').forEach((a) =>
+    a.addEventListener('click', () => a.closest('details')?.removeAttribute('open')),
+  );
+</script>
+
+<style>
+  .progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 40;
+    height: 4px;
+    background: var(--grid);
+  }
+  .bar {
+    width: 0;
+    height: 4px;
+    background: var(--red);
+  }
+
+  .hero {
+    padding: 40px 0 48px;
+    border-bottom: 1px solid var(--white);
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 24px;
+    margin-bottom: 28px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--smoke);
+  }
+  .tag-red {
+    padding: 6px 10px;
+    background: var(--red);
+    color: var(--white);
+  }
+  .topic {
+    color: var(--muted);
+  }
+  h1 {
+    max-width: 1200px;
+    font-size: clamp(56px, 7.4vw, 124px);
+    line-height: 0.88;
+    letter-spacing: -0.055em;
+  }
+  .standfirst {
+    margin-top: 32px;
+    max-width: 760px;
+    font-size: 24px;
+    line-height: 1.45;
+    color: var(--muted);
+  }
+
+  .layout {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 48px;
+    padding: 64px 0 96px;
+  }
+  .side {
+    flex: 1 1 220px;
+    max-width: 280px;
+  }
+  .side-inner {
+    position: sticky;
+    top: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+  .toc {
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 2;
+  }
+  .toc-title {
+    margin-bottom: 8px;
+  }
+  .toc a {
+    color: var(--smoke);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .toc a:hover,
+  .toc a.on {
+    color: var(--white);
+  }
+  .share {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--smoke);
+  }
+  .copy-link {
+    align-self: flex-start;
+    min-height: 40px;
+    padding: 0 14px;
+    border: 1px solid var(--white);
+    background: transparent;
+    color: var(--white);
+    font-family: var(--mono);
+    font-size: 12px;
+    transition: background 0.2s, color 0.2s;
+  }
+  .copy-link:hover {
+    background: var(--white);
+    color: var(--ink);
+  }
+  .main {
+    flex: 999 1 560px;
+    min-width: 0;
+    max-width: 720px;
+  }
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 40px;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  .tags span {
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+  }
+
+  .toc-mobile {
+    display: none;
+  }
+
+  .reply {
+    display: flex;
+    flex-wrap: wrap;
+    margin-bottom: 64px;
+  }
+  .r-red,
+  .r-white {
+    flex: 1 1 520px;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .r-red {
+    background: var(--red);
+  }
+  .r-white {
+    background: var(--white);
+    color: var(--ink);
+  }
+  .small {
+    font-size: 12px;
+  }
+  .big {
+    font-weight: 800;
+    font-size: clamp(32px, 3.4vw, 52px);
+    line-height: 0.92;
+    letter-spacing: -0.05em;
+  }
+  .r-btn {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    padding: 0 20px;
+    color: var(--white);
+    text-decoration: none;
+    font-weight: 700;
+    transition: background 0.2s;
+  }
+  .r-btn.dark {
+    background: var(--ink);
+  }
+  .r-btn.dark:hover {
+    background: var(--charcoal);
+  }
+  .r-btn.red {
+    background: var(--red);
+  }
+  .r-btn.red:hover {
+    background: var(--red-deep);
+  }
+
+  @media (max-width: 899px) {
+    .hero {
+      padding: 32px 0 28px;
+    }
+    .meta {
+      gap: 8px 14px;
+      margin-bottom: 18px;
+      font-size: 11px;
+    }
+    .tag-red {
+      padding: 5px 8px;
+    }
+    h1 {
+      font-size: clamp(44px, 13vw, 72px);
+    }
+    .standfirst {
+      margin-top: 20px;
+      font-size: 19px;
+    }
+    .toc-mobile {
+      display: block;
+      margin-top: 16px;
+      border: 1px solid var(--border);
+    }
+    .toc-mobile summary {
+      min-height: 52px;
+      padding: 0 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--mono);
+      font-size: 12px;
+      cursor: pointer;
+      list-style: none;
+    }
+    .toc-mobile summary::-webkit-details-marker {
+      display: none;
+    }
+    .toc-mobile[open] .chev {
+      transform: rotate(180deg);
+    }
+    .toc-mobile ol {
+      margin: 0;
+      padding: 0 14px 14px;
+      list-style: none;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 2.2;
+    }
+    .toc-mobile a {
+      color: var(--muted);
+      text-decoration: none;
+    }
+    .layout {
+      padding: 32px 0 40px;
+    }
+    .side {
+      display: none;
+    }
+    .main {
+      flex-basis: 100%;
+    }
+    .tags {
+      margin-top: 24px;
+      font-size: 11px;
+      gap: 6px;
+    }
+    .tags span {
+      padding: 5px 8px;
+    }
+    .reply {
+      flex-direction: column;
+      margin-bottom: 40px;
+    }
+    .r-red,
+    .r-white {
+      flex-basis: auto;
+      padding: 24px 16px;
+      gap: 14px;
+    }
+    .small {
+      display: none;
+    }
+    .big {
+      font-size: 28px;
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+    }
+    .r-btn {
+      align-self: stretch;
+      justify-content: center;
+    }
+  }
+</style>

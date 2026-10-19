@@ -1,0 +1,68 @@
+---
+// Notes and sources at the foot of a post.
+interface Props {
+  sources: { label: string; url?: string }[];
+  label?: string;
+  numbered?: boolean; // 1. 2. 3. (AI notes) or → arrows (experiments, rabbit holes)
+  id?: string;
+}
+const { sources, label = 'Notes and sources', numbered = false, id } = Astro.props;
+---
+
+{
+  sources.length > 0 && (
+    <section id={id} class="sources" aria-label={label}>
+      <div class="src-label">{label}</div>
+      {sources.map((s, i) => (
+        <div class="src">
+          <span class="mark">{numbered ? `${i + 1}.` : '→'}</span>{' '}
+          {s.url ? (
+            <a href={s.url} rel="noopener">
+              {s.label}
+            </a>
+          ) : (
+            s.label
+          )}
+        </div>
+      ))}
+    </section>
+  )
+}
+
+<style>
+  .sources {
+    margin: 48px 0 0;
+    border-top: 1px solid var(--border);
+    padding-top: 20px;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--muted);
+  }
+  .src-label {
+    margin-bottom: 10px;
+    color: var(--smoke);
+  }
+  .src {
+    display: flex;
+    gap: 6px;
+  }
+  .mark {
+    flex: 0 0 auto;
+  }
+  a {
+    color: var(--muted);
+    text-decoration-color: var(--red);
+    text-underline-offset: 3px;
+  }
+  a:hover {
+    color: var(--white);
+  }
+  @media (max-width: 640px) {
+    .sources {
+      margin-top: 32px;
+      padding-top: 16px;
+      font-size: 12px;
+    }
+  }
+</style>

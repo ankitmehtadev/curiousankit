@@ -1,0 +1,97 @@
+---
+// "Keep going" links at the foot of a post. Either side may be missing.
+type Link = { label: string; title: string; href: string };
+interface Props {
+  prev?: Link;
+  next?: Link;
+}
+const { prev, next } = Astro.props;
+---
+
+{
+  (prev || next) && (
+    <section class="keep" aria-label="Keep going">
+      {prev ? (
+        <a class="nx prev" href={prev.href}>
+          <span class="nl">← {prev.label}</span>
+          <span class="nt">{prev.title}</span>
+        </a>
+      ) : (
+        <span class="nx prev empty" />
+      )}
+      {next ? (
+        <a class="nx next" href={next.href}>
+          <span class="nl">{next.label} →</span>
+          <span class="nt">{next.title}</span>
+        </a>
+      ) : (
+        <span class="nx next empty" />
+      )}
+    </section>
+  )
+}
+
+<style>
+  .keep {
+    display: flex;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--white);
+  }
+  .nx {
+    flex: 1 1 420px;
+    min-width: 0;
+    padding: 32px 0 40px;
+    text-decoration: none;
+    color: var(--white);
+  }
+  .prev {
+    padding-right: 32px;
+    border-right: 1px solid var(--border);
+  }
+  .next {
+    padding-left: 32px;
+    text-align: right;
+  }
+  .nl {
+    display: block;
+    margin-bottom: 14px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--smoke);
+  }
+  .nt {
+    display: block;
+    font-weight: 800;
+    font-size: 36px;
+    line-height: 0.95;
+    letter-spacing: -0.045em;
+    transition: color 0.2s;
+  }
+  .nx:hover .nt {
+    color: var(--red);
+  }
+  @media (max-width: 899px) {
+    .keep {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+    .nx {
+      padding: 18px 0;
+    }
+    .prev {
+      padding-right: 12px;
+    }
+    .next {
+      padding-left: 12px;
+    }
+    .nl {
+      font-size: 11px;
+      margin-bottom: 8px;
+    }
+    .nt {
+      font-size: 20px;
+      line-height: 1;
+      letter-spacing: -0.03em;
+    }
+  }
+</style>

@@ -1,0 +1,670 @@
+---
+import { getCollection } from 'astro:content';
+import Subscribe from '../../components/Subscribe.astro';
+import Base from '../../layouts/Base.astro';
+import { RABBIT_TOPICS, RABBIT_TOPIC_BLURBS, SITE_TITLE } from '../../consts';
+import { formatDate, isRabbit, noteUrl, sortNotes } from '../../utils';
+
+const holes = sortNotes((await getCollection('blog')).filter(isRabbit));
+const depthOf = (n: (typeof holes)[number]) => n.data.depth ?? 1;
+const deepCount = holes.filter((n) => depthOf(n) === 3).length;
+const dives = holes.filter((n) => n.data.deepDive);
+const depthWord = ['', 'Quick dip', 'Getting deep', 'All the way down'];
+
+const firstWithNotes = RABBIT_TOPICS.find((t) => holes.some((n) => n.data.topic === t)) ?? RABBIT_TOPICS[0];
+const topics = RABBIT_TOPICS.map((name, i) => {
+  const list = holes.filter((n) => n.data.topic === name);
+  return {
+    n: String(i + 1).padStart(2, '0'),
+    name,
+    text: RABBIT_TOPIC_BLURBS[name],
+    list,
+    count: `${list.length} ${list.length === 1 ? 'hole' : 'holes'}`,
+    open: name === firstWithNotes,
+  };
+});
+
+const intro =
+  "Things I researched because I couldn't stop wondering. Psychology, history, money, productivity and whatever else. Explained simply, so you can go deeper too.";
+---
+
+<Base title={`Rabbit Holes | ${SITE_TITLE}`} description={intro}>
+  <section class="hero wrap" data-hero="white">
+    <div class="hero-in">
+      <div class="lead">
+        <div class="mono kicker">Stream 02</div>
+        <h1>Rabbit Holes</h1>
+        <p class="intro">{intro}</p>
+      </div>
+      <div class="counts">
+        <div><div class="num">{holes.length}</div><div class="mono cap">Holes explored</div></div>
+        <div><div class="num">{RABBIT_TOPICS.length}</div><div class="mono cap">Topics</div></div>
+        <div><div class="num red">{deepCount}</div><div class="mono cap">Went all the way down</div></div>
+      </div>
+    </div>
+  </section>
+  <div class="fade" aria-hidden="true"></div>
+
+  <div class="wrap">
+    <section class="pick" aria-labelledby="pick">
+      <div class="sec-head">
+        <h2 id="pick">Pick a hole.</h2>
+        <span class="mono legend">
+          Depth
+          <span class="dots" aria-hidden="true"><span class="on"></span><span></span><span></span></span>
+          quick dip to
+          <span class="dots" aria-hidden="true"><span class="on"></span><span class="on"></span><span class="on"></span></span>
+          all the way down
+        </span>
+      </div>
+      <div class="acc">
+        {
+          topics.map((t) => (
+            <div class="topic">
+              <button
+                type="button"
+                class="trow"
+                aria-expanded={t.open ? 'true' : 'false'}
+                aria-controls={`topic-${t.name}`}
+              >
+                <span class="mono tnum">{t.n}</span>
+                <span class="tname-wrap">
+                  <span class="tn">{t.name}</span>
+                  <span class="tlens" aria-hidden="true">
+                    <span />
+                  </span>
+                </span>
+                <span class="ttext">{t.text}</span>
+                <span class="mono tcount">{t.count}</span>
+                <span class="sign" aria-hidden="true" />
+              </button>
+              <div class="drop" id={`topic-${t.name}`} hidden={!t.open}>
+                {t.list.map((x) => (
+                  <a href={noteUrl(x)} class="nrow">
+                    <span class="nt">{x.data.title}</span>
+                    <span class="nmeta">
+                      <span class="dots big" role="img" aria-label={`Depth ${depthOf(x)} of 3: ${depthWord[depthOf(x)]}`}>
+                        {[1, 2, 3].map((i) => (
+                          <span class:list={[i <= depthOf(x) && 'on']} />
+                        ))}
+                      </span>
+                      <span class="mono ndate">{formatDate(x.data.pubDate)}</span>
+                    </span>
+                  </a>
+                ))}
+                {t.list.length === 0 && (
+                  <div class="nrow soon">
+                    <span class="nt">First {t.name.toLowerCase()} hole coming soon.</span>
+                    <a href="/contact/" class="mono suggest">
+                      Suggest one →
+                    </a>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <section class="deep" aria-labelledby="deep">
+      <div class="sec-head">
+        <div>
+          <div class="mono eyebrow">Deepest dives<span class="swipe"> · swipe →</span></div>
+          <h2 id="deep">All the way down.</h2>
+        </div>
+        <a href="/archive/" class="mono archive-link">Every hole in the Archive →</a>
+      </div>
+      <div class="dives">
+        {
+          dives.map((v) => (
+            <a href={noteUrl(v)} class="dive">
+              <span class="strip" aria-hidden="true" />
+              <span class="dbody">
+                <span class="mono dtop">
+                  <span>{v.data.topic}</span>
+                  <span>{formatDate(v.data.pubDate)}</span>
+                </span>
+                <span class="dt">{v.data.title}</span>
+                <span class="mono path">Surface → Level 1 → Level 2 → Rock bottom</span>
+              </span>
+            </a>
+          ))
+        }
+        {
+          dives.length === 0 && (
+            <div class="dive empty">
+              <span class="strip" aria-hidden="true" />
+              <span class="dbody">
+                <span class="mono dtop">
+                  <span>Coming soon</span>
+                  <span>Depth 3 of 3</span>
+                </span>
+                <span class="dt">The first deep dive is still being dug.</span>
+                <span class="mono path">Surface → Level 1 → Level 2 → Rock bottom</span>
+              </span>
+            </div>
+          )
+        }
+      </div>
+    </section>
+
+    <Subscribe id="subscribe-rh" pitch="Fall down the next one" accent="with me." />
+  </div>
+</Base>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('.acc .trow').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const open = btn.getAttribute('aria-expanded') !== 'true';
+      // One topic open at a time.
+      document.querySelectorAll<HTMLButtonElement>('.acc .trow').forEach((other) => {
+        other.setAttribute('aria-expanded', 'false');
+        const panel = document.getElementById(other.getAttribute('aria-controls') ?? '');
+        if (panel) panel.hidden = true;
+      });
+      if (open) {
+        btn.setAttribute('aria-expanded', 'true');
+        const panel = document.getElementById(btn.getAttribute('aria-controls') ?? '');
+        if (panel) panel.hidden = false;
+      }
+    });
+  });
+</script>
+
+<style is:global>
+  /* The site header sits on the white hero on this page. */
+  body:has([data-hero='white']) .site-header {
+    background-color: var(--white);
+    color: var(--ink);
+  }
+  body:has([data-hero='white']) .site-header .logo {
+    color: var(--ink);
+  }
+  body:has([data-hero='white']) .site-header .desk a[aria-current='page'] {
+    padding: 6px 10px;
+    background: var(--ink);
+    color: var(--white);
+  }
+  body:has([data-hero='white']) .site-header .desk .search {
+    border-color: #d0d0cc;
+    color: var(--ink);
+  }
+  body:has([data-hero='white']) .site-header .desk .search:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+  body:has([data-hero='white']) .site-header .open {
+    background: var(--ink);
+  }
+</style>
+
+<style>
+  .hero {
+    background: var(--white);
+    color: var(--ink);
+    padding-top: 40px;
+    padding-bottom: 56px;
+  }
+  .hero-in {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 32px 0;
+  }
+  .lead {
+    flex: 3 1 600px;
+    padding-right: 32px;
+  }
+  .kicker {
+    font-size: 13px;
+    margin-bottom: 18px;
+  }
+  h1 {
+    font-size: clamp(72px, 10vw, 168px);
+    line-height: 0.84;
+    letter-spacing: -0.06em;
+  }
+  .intro {
+    margin-top: 28px;
+    max-width: 620px;
+    font-size: 22px;
+    line-height: 1.45;
+  }
+  .counts {
+    flex: 2 1 340px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-top: 1px solid var(--ink);
+  }
+  .counts > div {
+    padding: 18px 12px 0;
+  }
+  .counts > div:first-child {
+    padding-left: 0;
+  }
+  .num {
+    font-weight: 800;
+    font-size: 64px;
+    line-height: 0.85;
+    letter-spacing: -0.05em;
+  }
+  .cap {
+    margin-top: 8px;
+    font-size: 12px;
+  }
+  .fade {
+    height: 180px;
+    background: linear-gradient(var(--white), var(--ink));
+  }
+
+  .sec-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  h2 {
+    font-size: clamp(44px, 5vw, 80px);
+    line-height: 0.9;
+    letter-spacing: -0.05em;
+  }
+  .eyebrow {
+    font-size: 13px;
+    color: var(--smoke);
+    margin-bottom: 12px;
+  }
+  .swipe {
+    display: none;
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--smoke);
+  }
+  .dots {
+    display: inline-flex;
+    gap: 3px;
+  }
+  .dots > span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 1px solid #5e5e5a;
+  }
+  .dots > span.on {
+    background: var(--red);
+    border-color: var(--red);
+  }
+  .dots.big {
+    gap: 4px;
+  }
+  .dots.big > span {
+    width: 10px;
+    height: 10px;
+  }
+
+  .pick {
+    padding: 24px 0 96px;
+  }
+  .acc {
+    border-top: 1px solid var(--white);
+  }
+  .topic {
+    border-bottom: 1px solid var(--border);
+  }
+  .trow {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 24px;
+    padding: 22px 0;
+    border: 0;
+    background: transparent;
+    color: var(--white);
+    text-align: left;
+  }
+  .tnum {
+    flex: 0 0 48px;
+    font-size: 13px;
+    color: var(--smoke);
+  }
+  .tname-wrap {
+    flex: 999 1 420px;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .tn {
+    font-weight: 800;
+    font-size: clamp(48px, 6vw, 96px);
+    line-height: 0.9;
+    letter-spacing: -0.055em;
+    transition: color 0.2s;
+  }
+  .tlens {
+    display: inline-block;
+    position: relative;
+    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    border: 8px solid var(--red);
+    border-radius: 50%;
+    opacity: 0;
+    transform: translateX(-12px);
+    transition: opacity 0.25s, transform 0.25s;
+  }
+  .tlens > span {
+    position: absolute;
+    width: 8px;
+    height: 18px;
+    background: var(--red);
+    right: -12px;
+    bottom: -14px;
+    transform: rotate(-45deg);
+  }
+  .ttext {
+    flex: 1 1 260px;
+    font-size: 16px;
+    line-height: 1.45;
+    color: var(--muted);
+  }
+  .tcount {
+    flex: 0 0 90px;
+    font-size: 12px;
+    color: var(--smoke);
+    text-align: right;
+  }
+  .sign {
+    flex: 0 0 32px;
+    font-size: 28px;
+    text-align: right;
+  }
+  .sign::before {
+    content: '+';
+  }
+  .trow[aria-expanded='true'] .sign::before {
+    content: '−';
+  }
+  .trow[aria-expanded='true'] .tn,
+  .trow[aria-expanded='true'] .sign,
+  .trow:hover .tn {
+    color: var(--red);
+  }
+  .trow:hover .tlens {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  .drop {
+    padding: 0 0 28px 72px;
+    animation: drop 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  @keyframes drop {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  .nrow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 24px;
+    padding: 16px 0;
+    border-top: 1px solid var(--charcoal);
+    color: var(--white);
+    text-decoration: none;
+  }
+  .nt {
+    flex: 999 1 380px;
+    min-width: 0;
+    font-weight: 800;
+    font-size: 28px;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    transition: color 0.2s;
+  }
+  a.nrow:hover .nt {
+    color: var(--red);
+  }
+  .nmeta {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+  .ndate {
+    min-width: 110px;
+    font-size: 12px;
+    color: var(--smoke);
+    text-align: right;
+  }
+  .soon .nt {
+    color: var(--muted);
+  }
+  .suggest {
+    font-size: 12px;
+    color: var(--white);
+  }
+  .suggest:hover,
+  .archive-link:hover {
+    color: var(--red);
+  }
+  .archive-link {
+    font-size: 13px;
+  }
+
+  .deep {
+    padding-bottom: 120px;
+  }
+  .deep .sec-head {
+    margin-bottom: 32px;
+  }
+  .dives {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+  }
+  .dive {
+    display: flex;
+    min-height: 340px;
+    background: var(--white);
+    color: var(--ink);
+    text-decoration: none;
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  a.dive:hover {
+    transform: translateY(-8px);
+  }
+  a.dive:hover .dt {
+    color: var(--red);
+  }
+  .dive.empty {
+    max-width: 460px;
+    background: transparent;
+    color: var(--white);
+    border: 2px dashed #3a3a3a;
+  }
+  .strip {
+    flex: 0 0 14px;
+    background: linear-gradient(var(--white), var(--red) 60%, var(--ink));
+  }
+  .dbody {
+    flex: 1 1 auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .dtop {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+  }
+  .dt {
+    margin-top: auto;
+    font-weight: 800;
+    font-size: 34px;
+    line-height: 0.95;
+    letter-spacing: -0.045em;
+    transition: color 0.2s;
+  }
+  .path {
+    font-size: 12px;
+    color: #5e5e5a;
+  }
+  .dive.empty .dt {
+    color: var(--muted);
+  }
+  .dive.empty .dtop,
+  .dive.empty .path {
+    color: var(--smoke);
+  }
+
+  @media (max-width: 640px) {
+    .hero {
+      padding-top: 24px;
+      padding-bottom: 32px;
+    }
+    .lead {
+      padding-right: 0;
+    }
+    .kicker {
+      font-size: 12px;
+      margin-bottom: 12px;
+    }
+    h1 {
+      font-size: 64px;
+    }
+    .intro {
+      margin-top: 18px;
+      font-size: 17px;
+    }
+    .counts > div {
+      padding: 14px 0 0;
+    }
+    .num {
+      font-size: 44px;
+    }
+    .cap {
+      margin-top: 6px;
+      font-size: 11px;
+    }
+    .fade {
+      height: 120px;
+    }
+    h2 {
+      font-size: 40px;
+    }
+    .sec-head {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+    .legend {
+      font-size: 11px;
+      gap: 8px;
+    }
+    .pick {
+      padding: 8px 0 56px;
+    }
+    .trow {
+      flex-wrap: nowrap;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 18px 0;
+    }
+    .tnum,
+    .ttext,
+    .tlens {
+      display: none;
+    }
+    .tname-wrap {
+      flex: 1 1 auto;
+    }
+    .tn {
+      font-size: 48px;
+    }
+    .tcount {
+      flex: 0 0 auto;
+      font-size: 11px;
+    }
+    .sign {
+      flex: 0 0 auto;
+      font-size: 26px;
+    }
+    .drop {
+      padding: 0 0 18px;
+    }
+    .nrow {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+      padding: 14px 0;
+    }
+    .nt {
+      flex: none;
+      font-size: 22px;
+      letter-spacing: -0.035em;
+    }
+    .nmeta {
+      justify-content: space-between;
+    }
+    .ndate {
+      font-size: 11px;
+    }
+    .deep {
+      padding-bottom: 56px;
+    }
+    .eyebrow {
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
+    .swipe {
+      display: inline;
+    }
+    .archive-link {
+      display: none;
+    }
+    .dives {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      margin: 0 calc(var(--gutter) * -1);
+      padding: 0 var(--gutter);
+      scrollbar-width: none;
+    }
+    .dive {
+      flex: 0 0 270px;
+      min-height: 260px;
+    }
+    .strip {
+      flex-basis: 12px;
+    }
+    .dbody {
+      padding: 18px;
+      gap: 10px;
+    }
+    .dtop {
+      font-size: 11px;
+    }
+    .dt {
+      font-size: 28px;
+    }
+    .path {
+      display: none;
+    }
+  }
+</style>

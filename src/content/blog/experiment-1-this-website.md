@@ -1,13 +1,16 @@
 ---
-title: 'Experiment 1: This website'
+title: 'This website'
 description: 'What happened when I ran a website like a business analysis project, with AI as the delivery team.'
 pubDate: 'Oct 04 2026'
-category: 'Experiments'
+stream: 'AI Journey'
+format: 'Experiment'
+topic: 'Builds'
+exp: 1
+status: 'Done'
 question: 'Can I run a website the way I run a business analysis project, with AI as the delivery team?'
 outcome: 'Worked'
 tools: ['Claude', 'Astro', 'Cloudflare', 'GitHub']
 tags: ['Business analysis', 'Building with AI', 'This site']
-startHere: false
 ---
 
 The question behind this experiment was simple. Could I run a website the way I run a project at work, with a brief, options to react to, a specification, a build, testing and a release, and let AI do the delivery? You are reading the answer.

@@ -1,324 +1,620 @@
 ---
 import { getCollection } from 'astro:content';
-import NoteRow from '../components/NoteRow.astro';
 import Subscribe from '../components/Subscribe.astro';
 import Base from '../layouts/Base.astro';
-import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
-import { LEARNING } from '../data/learning';
-import { categoryUrl, formatDate, noteUrl, readingTime, sortNotes } from '../utils';
+import { CURRENTLY_CURIOUS, RABBIT_TOPICS, SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import { expLabel, isAINote, isExperiment, isRabbit, noteUrl, sortNotes } from '../utils';
 
 const all = sortNotes(await getCollection('blog'));
-// "Latest" and "Recent notes" show notes only. Experiments appear in "From the sandpit".
-const notes = all.filter((n) => n.data.category === 'Notes');
-const latest = notes[0];
-const recent = notes.slice(1, 4);
-const sandpit = all.filter((n) => n.data.category === 'Experiments').slice(0, 2);
-// "Currently studying": what is in progress first, then what is up next.
-const studyingList = [...LEARNING.filter((i) => i.status === 'studying'), ...LEARNING.filter((i) => i.status === 'next')]
-  .slice(0, 4)
-  .map((i) => ({
-    title: i.title,
-    meta: `${i.by} · ${i.status === 'next' ? 'up next' : i.kind === 'Book' ? 'reading' : i.kind === 'Video' ? 'watching' : 'in progress'}`,
-  }));
-const hasBand = sandpit.length > 0 || studyingList.length > 0;
+const ai = all.filter((n) => n.data.stream === 'AI Journey');
+const rabbits = all.filter(isRabbit);
+const latestNote = all.find(isAINote);
+const latestExp = all.find(isExperiment);
+const latestRabbit = rabbits[0];
+
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+// Everything published, for the "Random rabbit hole" shuffle.
+const pool = all.map((n) => ({
+  stream: n.data.stream,
+  topic: isRabbit(n)
+    ? n.data.topic
+    : isExperiment(n)
+      ? `${expLabel(n.data.exp).replace('Exp.', 'Experiment')} · ${n.data.topic}`
+      : `Note · ${n.data.topic}`,
+  title: n.data.title,
+  url: noteUrl(n),
+}));
+const first = pool[Math.floor(pool.length / 2)];
 ---
 
 <Base title={SITE_TITLE} description={SITE_DESCRIPTION}>
-  <section class="wrap hero">
-    <h1>A notebook on learning AI, <em>one experiment at a time.</em></h1>
-    <p class="lede">
-      <span class="long">I'm Ankit. These are my working notes: the courses I take, the things I build, the mistakes I make, and what I learn along the way.</span>
-      <span class="short">These are my working notes: the courses I take, the things I build and the mistakes I make.</span>
-    </p>
+  <div class="ticker-band" aria-label="Currently curious about">
+    <div class="ticker">
+      {
+        [0, 1].map((copy) => (
+          <div class="ticker-set" aria-hidden={copy === 1 ? 'true' : undefined}>
+            <span>Currently curious about →</span>
+            {CURRENTLY_CURIOUS.map((item) => (
+              <>
+                <span>{item}</span>
+                <span aria-hidden="true">●</span>
+              </>
+            ))}
+          </div>
+        ))
+      }
+    </div>
+  </div>
+
+  <div class="wrap">
+    <section class="intro" aria-label="Introduction">
+      <h1>Notes from an endlessly <span class="red">curious</span> mind.</h1>
+      <p class="mono">
+        Two streams, one lens. My hands on journey with AI, and every rabbit hole I fall into along the way<span class="desk-only">: psychology, history, money, productivity and whatever else catches my eye</span>.
+      </p>
+    </section>
+
+    <div class="label-row door-label"><span>Pick a door</span><span>2 ways in ↓</span></div>
+    <section id="streams" class="doors" aria-label="Choose a stream">
+      <a href="/ai-journey/" class="door door-red" aria-label="Enter the AI Journey stream">
+        <div class="door-top mono"><span>Stream 01</span><span>{plural(ai.length, 'entry', 'entries')}</span></div>
+        <div>
+          <div class="dt">AI Journey</div>
+          <p class="door-text">
+            Notes on what I'm learning, and numbered experiments where I try, break and build things with AI.<span class="desk-only"> Honest results included.</span>
+          </p>
+          <div class="tags">
+            <span>Notes</span>
+            <span>Experiments</span>
+          </div>
+        </div>
+        <div class="door-foot mono">
+          <span class="latest">
+            {
+              latestNote && (
+                <span class="desk-only">
+                  <span class="dim">Latest note ·</span> {latestNote.data.title}
+                </span>
+              )
+            }
+            {
+              latestExp && (
+                <span>
+                  <span class="dim">Latest experiment ·</span> {expLabel(latestExp.data.exp)} · {latestExp.data.title}{' '}
+                  {latestExp.data.status && <span class="badge">{latestExp.data.status}</span>}
+                </span>
+              )
+            }
+            {!latestNote && !latestExp && <span class="dim">First entry coming soon</span>}
+          </span>
+          <span class="enter" aria-hidden="true"><span class="el">Enter</span><span class="ec">→</span></span>
+        </div>
+      </a>
+
+      <a href="/rabbit-holes/" class="door door-white" aria-label="Enter the Rabbit Holes stream">
+        <div class="door-top mono"><span>Stream 02</span><span>{plural(rabbits.length, 'note', 'notes')}</span></div>
+        <div>
+          <div class="dt">Rabbit Holes</div>
+          <p class="door-text">
+            Things I researched because I could not stop wondering. Explained simply<span class="desk-only">, so you can go deeper too</span>.
+          </p>
+          <div class="tags">
+            {RABBIT_TOPICS.map((t, i) => <span class={i >= 3 ? 'desk-only' : undefined}>{t}</span>)}
+            <span class="mob-only">+{RABBIT_TOPICS.length - 3}</span>
+          </div>
+        </div>
+        <div class="door-foot mono">
+          <span class="latest">
+            {
+              latestRabbit ? (
+                <span>
+                  <span class="dim">Latest ·</span> {latestRabbit.data.title}
+                </span>
+              ) : (
+                <span>
+                  <span class="dim">Latest ·</span> First rabbit hole coming soon
+                </span>
+              )
+            }
+          </span>
+          <span class="enter" aria-hidden="true"><span class="el">Enter</span><span class="ec">→</span></span>
+        </div>
+      </a>
+    </section>
+
     {
-      all.length > 0 && (
-        <p class="start">
-          <a class="long" href="/start">New here? Here's where I'd start.</a>
-          <a class="btn short" href="/start">Where to begin</a>
-        </p>
+      first && (
+        <section class="random" aria-label="Random rabbit hole">
+          <div class="label-row">
+            <span>Random rabbit hole</span>
+            <span class="desk-only">Can't decide what to read? Let curiosity choose.</span>
+          </div>
+          <div class="random-body">
+            <div class="pick" aria-live="polite">
+              <span class="pick-meta mono">
+                <span class={`dot ${first.stream === 'AI Journey' ? 'dot-red' : 'dot-white'}`} />
+                <span class="pick-label">
+                  {first.stream} · {first.topic}
+                </span>
+              </span>
+              <a href={first.url} class="pick-title">
+                <span class="pick-text">{first.title}</span> <span class="red">→</span>
+              </a>
+            </div>
+            {pool.length > 1 && (
+              <button type="button" class="dice" aria-label="Shuffle to another random note">
+                <span class="spin" aria-hidden="true">↻</span>
+                <span class="mono">Shuffle</span>
+              </button>
+            )}
+          </div>
+          <script type="application/json" id="pool" set:html={JSON.stringify(pool)}></script>
+        </section>
       )
     }
-  </section>
 
-  {
-    latest && (
-      <section class="wrap latest">
-        <div class="side">
-          <p class="eyebrow">Latest</p>
-          <p class="side-meta">
-            <time datetime={latest.data.pubDate.toISOString()}>{formatDate(latest.data.pubDate)}</time>
-          </p>
-          <p class="side-meta">{latest.data.category} &middot; {readingTime(latest.body)} min read</p>
-        </div>
-        <p class="eyebrow top-line">Latest &middot; {formatDate(latest.data.pubDate, false)}</p>
-        <div class="story">
-          <h2><a href={noteUrl(latest)}>{latest.data.title}</a></h2>
-          <p class="excerpt">{latest.data.description}</p>
-          <p><a class="more" href={noteUrl(latest)}>Read the note</a></p>
-        </div>
-      </section>
-    )
-  }
-
-  {
-    recent.length > 0 && (
-      <section class="wrap recent">
-        <div class="recent-head">
-          <h2>Recent notes</h2>
-          <a href="/notes">All notes</a>
-        </div>
-        {recent.map((note) => (
-          <NoteRow note={note} />
-        ))}
-      </section>
-    )
-  }
-
-  {
-    hasBand && (
-      <section class="band">
-        <div class:list={['wrap', 'band-grid', { both: sandpit.length > 0 && studyingList.length > 0 }]}>
-          {sandpit.length > 0 && (
-            <div class="sandpit">
-              <h2>From the sandpit</h2>
-              <div class="cards">
-                {sandpit.map((note) => (
-                  <a class="card" href={noteUrl(note)}>
-                    <span class="eyebrow">Experiment</span>
-                    <span class="card-title">{note.data.title}</span>
-                    <span class="card-text">{note.data.description}</span>
-                  </a>
-                ))}
-              </div>
-              <p class="more-row">
-                <a href={categoryUrl('Experiments')}>All experiments</a>
-              </p>
-            </div>
-          )}
-          {studyingList.length > 0 && (
-            <div class="studying">
-              <h2>Currently studying</h2>
-              <ul>
-                {studyingList.map((item) => (
-                  <li>
-                    <span class="s-title">{item.title}</span>
-                    <span class="s-meta">{item.meta}</span>
-                  </li>
-                ))}
-              </ul>
-              <p class="more-row">
-                <a href={categoryUrl('Learning')}>All learning</a>
-              </p>
-            </div>
-          )}
-        </div>
-      </section>
-    )
-  }
-
-  <Subscribe />
+    <Subscribe />
+  </div>
 </Base>
 
+<script>
+  type Pick = { stream: string; topic: string; title: string; url: string };
+  const data = document.getElementById('pool');
+  const dice = document.querySelector<HTMLButtonElement>('.dice');
+  if (data && dice) {
+    const pool: Pick[] = JSON.parse(data.textContent || '[]');
+    const title = document.querySelector<HTMLAnchorElement>('.pick-title');
+    const text = document.querySelector<HTMLElement>('.pick-text');
+    const label = document.querySelector<HTMLElement>('.pick-label');
+    const dot = document.querySelector<HTMLElement>('.pick-meta .dot');
+    let current = pool.findIndex((p) => p.url === title?.getAttribute('href'));
+
+    const show = (i: number) => {
+      const p = pool[i];
+      current = i;
+      if (title) title.href = p.url;
+      if (text) text.textContent = p.title;
+      if (label) label.textContent = `${p.stream} · ${p.topic}`;
+      dot?.classList.toggle('dot-red', p.stream === 'AI Journey');
+      dot?.classList.toggle('dot-white', p.stream !== 'AI Journey');
+    };
+    dice.addEventListener('click', () => {
+      let n = current;
+      while (n === current) n = Math.floor(Math.random() * pool.length);
+      show(n);
+      dice.classList.remove('rolled');
+      void dice.offsetWidth;
+      dice.classList.add('rolled');
+    });
+  }
+</script>
+
 <style>
-  .hero {
-    padding-top: 5rem;
-    padding-bottom: 3.2rem;
+  /* Ticker */
+  .ticker-band {
+    background: var(--red);
+    overflow: hidden;
+    white-space: nowrap;
   }
-  .hero h1 {
-    max-width: 12.5em;
-    margin-bottom: 1.1rem;
-    font-size: clamp(2.5rem, 5.2vw, 3.9rem);
-    line-height: 1.08;
+  .ticker {
+    display: inline-flex;
+    animation: tick 40s linear infinite;
   }
-  .hero h1 em {
-    font-weight: 500;
-    color: var(--muted);
+  .ticker-set {
+    display: inline-flex;
+    gap: 48px;
+    padding: 14px 48px 14px 0;
+    font-family: var(--mono);
+    font-size: 14px;
   }
-  .lede {
-    max-width: 31rem;
-    margin-bottom: 1.2rem;
-    font-size: 0.98rem;
-    line-height: 1.7;
-  }
-  .start {
-    margin: 0;
-    font-size: 0.85rem;
-  }
-  .short {
-    display: none;
+  @keyframes tick {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
   }
 
-  .latest {
-    display: grid;
-    grid-template-columns: 7fr 12fr;
-    column-gap: 2rem;
-    padding: 2.4rem 0 2.4rem;
-    border-top: 1px solid var(--ink);
-    border-bottom: 1px solid var(--rule);
-  }
-  .side .eyebrow {
-    margin-bottom: 0.35rem;
-  }
-  .side-meta {
-    margin: 0;
-    font-size: 0.78rem;
-    line-height: 1.7;
-    color: var(--muted);
-  }
-  .top-line {
-    display: none;
-  }
-  .story h2 {
-    margin-bottom: 0.8rem;
-    font-size: clamp(1.9rem, 3.4vw, 2.5rem);
-    line-height: 1.12;
-  }
-  .story h2 a {
-    color: var(--ink);
-    text-decoration: none;
-  }
-  .story h2 a:hover {
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 0.15em;
-  }
-  .excerpt {
-    margin-bottom: 1.1rem;
-    font-size: 0.98rem;
-  }
-  .more {
-    font-size: 0.85rem;
-  }
-
-  .recent {
-    padding-top: 4rem;
-  }
-  .recent-head {
+  /* Intro */
+  .intro {
     display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    margin-bottom: 0.6rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 32px 0;
+    padding: 72px 0 64px;
   }
-  .recent-head h2 {
-    margin: 0;
-    font-size: 2rem;
+  h1 {
+    flex: 4 1 640px;
+    padding-right: 32px;
+    font-size: var(--display);
+    line-height: 0.88;
+    letter-spacing: -0.055em;
   }
-  .recent-head a {
-    font-size: 0.8rem;
+  .intro p {
+    flex: 2 1 280px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--muted);
+  }
+  .door-label {
+    padding-bottom: 16px;
   }
 
-  .band {
-    margin-top: 4.5rem;
-    padding: 3.2rem 0 3.4rem;
-    border-top: 1px solid var(--rule);
-    border-bottom: 1px solid var(--rule);
-    background: var(--band);
+  /* Doors */
+  .doors {
+    display: flex;
+    flex-wrap: wrap;
   }
-  .band-grid {
-    display: grid;
-    gap: 2.5rem;
-  }
-  .band-grid.both {
-    grid-template-columns: 2fr 1fr;
-    gap: 2.8rem;
-  }
-  .band h2 {
-    margin-bottom: 1.3rem;
-    font-size: 1.9rem;
-  }
-  .cards {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.9rem;
-  }
-  .card {
+  .door {
+    flex: 1 1 520px;
+    min-width: 0;
+    min-height: 520px;
+    padding: 40px;
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
-    padding: 1.2rem 1.3rem 1.3rem;
-    border: 1px solid var(--rule);
-    background: var(--card);
-    color: var(--text);
+    justify-content: space-between;
+    gap: 32px;
+    overflow: hidden;
     text-decoration: none;
+    transition:
+      flex-grow 0.55s cubic-bezier(0.2, 0.8, 0.2, 1),
+      background 0.25s,
+      opacity 0.3s;
   }
-  .card-title {
-    font-family: var(--font-title);
-    font-size: 1.4rem;
-    font-weight: 600;
-    line-height: 1.15;
+  .door-red {
+    background: var(--red);
+    color: var(--white);
+  }
+  .door-white {
+    background: var(--white);
     color: var(--ink);
   }
-  .card:hover .card-title {
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 0.15em;
+  .door-top {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
   }
-  .card-text {
-    font-size: 0.85rem;
-    line-height: 1.55;
+  .dt {
+    font-weight: 800;
+    font-size: clamp(56px, 6.4vw, 104px);
+    line-height: 0.86;
+    letter-spacing: -0.055em;
+    white-space: nowrap;
+    transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
-  .more-row {
-    margin: 1rem 0 0;
-    font-size: 0.8rem;
+  .door-text {
+    margin-top: 20px;
+    max-width: 460px;
+    font-size: 18px;
+    line-height: 1.5;
   }
-  .studying h2 {
-    padding-bottom: 0.9rem;
-    margin-bottom: 0;
-    border-bottom: 1px solid var(--ink);
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 24px;
   }
-  .studying ul {
-    margin: 0;
-    padding: 0;
-    list-style: none;
+  .tags span {
+    padding: 8px 14px;
+    border: 1px solid currentColor;
+    font-family: var(--mono);
+    font-size: 12px;
   }
-  .studying li {
-    padding: 0.75rem 0;
-    border-bottom: 1px solid var(--rule);
+  .door-foot {
+    border-top: 1px solid var(--ink);
+    padding-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    font-size: 13px;
   }
-  .s-title {
-    display: block;
-    font-size: 0.95rem;
+  .door-red .door-foot {
+    border-top-color: rgba(255, 255, 255, 0.5);
+  }
+  .latest {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
     line-height: 1.4;
-    color: var(--ink);
   }
-  .s-meta {
-    display: block;
-    font-size: 0.75rem;
-    color: var(--muted);
+  .dim {
+    opacity: 0.75;
+  }
+  .badge {
+    padding: 1px 6px;
+    background: var(--ink);
+    color: var(--white);
+    font-size: 11px;
+  }
+  .enter {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .el {
+    transition: letter-spacing 0.4s;
+  }
+  .ec {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font);
+    font-weight: 700;
+    font-size: 28px;
+    transition:
+      transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+      background 0.25s,
+      color 0.25s;
+  }
+  .door-red .ec {
+    background: var(--white);
+    color: var(--red);
+  }
+  .door-white .ec {
+    background: var(--ink);
+    color: var(--white);
+  }
+  .door:focus-visible {
+    outline: 3px solid var(--white);
+    outline-offset: -6px;
+  }
+  .door-white:focus-visible {
+    outline-color: var(--red);
   }
 
-  @media (max-width: 860px) {
-    .band-grid.both {
-      grid-template-columns: 1fr;
+  @media (hover: hover) and (min-width: 1100px) {
+    .doors:hover .door {
+      flex-grow: 1;
+    }
+    .doors .door:hover {
+      flex-grow: 1.55;
+    }
+    .doors:hover .door:not(:hover) {
+      opacity: 0.7;
     }
   }
-  @media (max-width: 760px) {
-    .hero {
-      padding-top: 3rem;
-      padding-bottom: 2rem;
+  @media (hover: hover) {
+    .door-red:hover {
+      background: var(--red-deep);
     }
-    .long {
-      display: none;
+    .door-white:hover {
+      background: #f4f4f2;
     }
-    .short {
+    .door:hover .dt {
+      transform: translateX(18px);
+    }
+    .door:hover .ec {
+      transform: scale(1.35) rotate(-45deg);
+    }
+    .door-white:hover .ec {
+      background: var(--red);
+      color: var(--white);
+    }
+    .door:hover .el {
+      letter-spacing: 0.08em;
+    }
+  }
+
+  /* Random rabbit hole */
+  .random {
+    margin-top: 120px;
+    border-top: 1px solid var(--white);
+    padding: 20px 0 140px;
+  }
+  .random-body {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 40px 48px;
+    padding-top: 64px;
+  }
+  .pick {
+    flex: 999 1 600px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .pick-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .dot {
+    width: 12px;
+    height: 12px;
+    flex: 0 0 auto;
+  }
+  .dot-red {
+    background: var(--red);
+  }
+  .dot-white {
+    background: var(--white);
+  }
+  .pick-title {
+    font-weight: 800;
+    font-size: var(--big);
+    line-height: 0.88;
+    letter-spacing: -0.055em;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .pick-title:hover {
+    color: var(--red);
+  }
+  .dice {
+    flex: 0 0 auto;
+    width: 200px;
+    height: 200px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--red);
+    color: var(--white);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: background 0.2s;
+  }
+  .dice:hover {
+    background: var(--red-deep);
+  }
+  .spin {
+    display: inline-block;
+    font-size: 64px;
+    line-height: 1;
+    transition: transform 0.4s;
+  }
+  .dice:hover .spin {
+    transform: rotate(180deg);
+  }
+  .dice .mono {
+    font-size: 13px;
+  }
+  .dice.rolled .spin {
+    animation: roll 0.5s ease;
+  }
+  @keyframes roll {
+    from {
+      transform: rotate(0);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .mob-only {
+    display: none;
+  }
+
+  /* Phone */
+  @media (max-width: 640px) {
+    .desk-only {
+      display: none !important;
+    }
+    .mob-only {
       display: inline;
     }
-    .btn.short {
-      display: inline-block;
+    .ticker {
+      animation-duration: 26s;
     }
-    .latest {
-      display: block;
-      padding: 1.8rem 0;
+    .ticker-set {
+      gap: 32px;
+      padding: 10px 32px 10px 0;
+      font-size: 12px;
     }
-    .side {
+    .intro {
+      padding: 40px 0;
+      gap: 20px;
+    }
+    h1 {
+      flex-basis: 100%;
+      padding-right: 0;
+      font-size: 54px;
+    }
+    .intro p {
+      flex-basis: 100%;
+      font-size: 13px;
+    }
+    .door-label {
+      font-size: 12px;
+      padding-bottom: 12px;
+    }
+    .doors {
+      margin: 0 calc(-1 * var(--gutter));
+    }
+    .door {
+      flex-basis: 100%;
+      min-height: 420px;
+      padding: 24px 16px;
+      gap: 28px;
+    }
+    .door-top {
+      font-size: 12px;
+    }
+    .dt {
+      font-size: 60px;
+    }
+    .door-text {
+      margin-top: 14px;
+      font-size: 16px;
+    }
+    .tags {
+      gap: 6px;
+      margin-top: 16px;
+    }
+    .tags span {
+      padding: 6px 10px;
+      font-size: 11px;
+    }
+    .door-foot {
+      padding-top: 14px;
+      gap: 12px;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+    .el {
       display: none;
     }
-    .top-line {
-      display: block;
-      margin-bottom: 0.6rem;
+    .ec {
+      width: 52px;
+      height: 52px;
+      font-size: 22px;
     }
-    .cards {
-      grid-template-columns: 1fr;
+    .random {
+      margin-top: 80px;
+      padding: 14px 0 80px;
+    }
+    .random .label-row {
+      font-size: 12px;
+    }
+    .random-body {
+      padding-top: 32px;
+      gap: 32px;
+    }
+    .pick {
+      flex-basis: 100%;
+      gap: 14px;
+    }
+    .pick-meta {
+      font-size: 12px;
+      gap: 8px;
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+    }
+    .pick-title {
+      font-size: 44px;
+      line-height: 0.9;
+      letter-spacing: -0.05em;
+    }
+    .dice {
+      width: 140px;
+      height: 140px;
+      gap: 4px;
+    }
+    .spin {
+      font-size: 44px;
+    }
+    .dice .mono {
+      font-size: 12px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ticker {
+      animation: none;
     }
   }
 </style>

@@ -1,120 +1,727 @@
 ---
-import { Image } from 'astro:assets';
-import portrait from '../assets/ankit.jpg';
+import Avatar from '../components/Avatar.astro';
 import Base from '../layouts/Base.astro';
 import { LINKS, SITE_TITLE } from '../consts';
+
+const doing = [
+  'Digital transformation',
+  'Procurement',
+  'Software delivery',
+  'Mentoring at Monash',
+  'Writing about AI',
+  'Falling down rabbit holes',
+];
 ---
 
-<Base title={`About | ${SITE_TITLE}`} description="Who is behind Curious Ankit, and why these notes exist.">
-  <section class="wrap about">
-    <h1>About</h1>
+<Base title={`About | ${SITE_TITLE}`} description="I'm Ankit, a technologist based in Melbourne, looking closer at AI and at whatever rabbit hole I fall into next." footer={false}>
+  <div class="wrap about">
+    <section class="poster">
+      <div class="intro">
+        <div class="hint-row mono">
+          <span class="hint">Hover to look closer ↓</span>
+          <button type="button" class="peek" aria-pressed="false">
+            <span class="peek-label">Up close</span><span class="mob-only"> (tap to reveal)</span>
+          </button>
+        </div>
+        <div class="lens-area">
+          <div class="layer">
+            <h1>I'm <span class="red">Ankit.</span></h1>
+            <p class="lede">A technologist based in Melbourne, looking closer at AI and at whatever rabbit hole I fall into next.</p>
+          </div>
+          <div class="reveal" aria-hidden="true">
+            <div class="layer">
+              <p class="reveal-title">Up <span class="white">close.</span></p>
+              <p class="lede">A chronic question asker who opens forty tabs, reads the footnotes and never stops at the first answer.</p>
+            </div>
+          </div>
+          <div class="ring" aria-hidden="true"><span></span></div>
+        </div>
+      </div>
 
-    <figure class="portrait">
-      <Image
-        src={portrait}
-        alt="Portrait of Ankit Mehta"
-        width={640}
-        widths={[320, 480, 640]}
-        sizes="(max-width: 760px) 14rem, 20rem"
-        loading="eager"
-      />
-    </figure>
+      <div class="figure">
+        <div class="bob">
+          <button type="button" class="trick" aria-label="Make Ankit do a trick">
+            <Avatar id="about" tricks />
+          </button>
+          <span class="trick-label mono" aria-live="polite"><span class="desk-only">Hover over me for a trick</span><span class="mob-only">Tap me for a trick</span></span>
+        </div>
+      </div>
 
-    <div class="prose">
-      <p>
-        I am Ankit, a technologist based in Melbourne. For more than twelve years I have worked on digital
-        transformation, procurement and software delivery, and I mentor postgraduate students at
-        Monash University.
-      </p>
-      <p>
-        This site is my notebook for learning AI in the open. It holds the experiments I run, the
-        courses I take, the things that worked and the things that did not. It is not a polished
-        portfolio. It is a record of me getting better at something, and I hope it is useful to
-        anyone a few steps behind me or alongside me.
-      </p>
-      <p>
-        The site itself is built with Astro and written, in part, with the help of AI, which seems
-        the right way to document it.
-      </p>
-      <p class="elsewhere">
-        <a href={`mailto:${LINKS.email}`}>{LINKS.email}</a>
-      </p>
-    </div>
-  </section>
+      <div class="doing">
+        <span class="mono small">What I do</span>
+        <ul>
+          {doing.map((d) => <li>{d}</li>)}
+        </ul>
+        <span class="mono small desk-only">12+ years and still curious</span>
+      </div>
+    </section>
+
+    <footer class="facts mono">
+      <div class="fact">
+        <div class="k">Right now</div>
+        <div>Learning [what you are learning]</div>
+        <div>Reading [current book]</div>
+      </div>
+      <div class="fact site">
+        <div class="k">This site</div>
+        <div>Two streams: AI Journey and Rabbit Holes</div>
+        <div>Built with Astro, AI as my pair</div>
+      </div>
+      <div class="fact">
+        <div class="k">Elsewhere</div>
+        <div><a href={LINKS.home}>ank1t.com</a> · <a href={LINKS.github}>GitHub</a></div>
+        {LINKS.linkedin && <div><a href={LINKS.linkedin}>LinkedIn</a></div>}
+      </div>
+      <div class="fact hello">
+        <div class="k">Say hello</div>
+        <a href="/contact/" class="ask">Ask me anything <span aria-hidden="true">→</span></a>
+      </div>
+    </footer>
+  </div>
 </Base>
+
+<script>
+  // Lens reveal: a circle that follows the pointer shows the "up close" layer underneath.
+  const area = document.querySelector<HTMLElement>('.lens-area');
+  const reveal = area?.querySelector<HTMLElement>('.reveal');
+  const ring = area?.querySelector<HTMLElement>('.ring');
+  const peek = document.querySelector<HTMLButtonElement>('.peek');
+  const peekLabel = peek?.querySelector<HTMLElement>('.peek-label');
+  const hint = document.querySelector<HTMLElement>('.hint');
+  let full = false;
+
+  const setClip = (v: string) => reveal && (reveal.style.clipPath = v);
+
+  if (area && reveal && ring) {
+    area.addEventListener('pointermove', (e) => {
+      if (full || e.pointerType !== 'mouse') return;
+      const r = area.getBoundingClientRect();
+      const x = Math.round(e.clientX - r.left);
+      const y = Math.round(e.clientY - r.top);
+      setClip(`circle(82px at ${x}px ${y}px)`);
+      ring.style.left = `${x}px`;
+      ring.style.top = `${y}px`;
+      ring.classList.add('on');
+    });
+    area.addEventListener('pointerleave', () => {
+      if (full) return;
+      setClip('circle(0px at 50% 50%)');
+      ring.classList.remove('on');
+    });
+  }
+
+  peek?.addEventListener('click', () => {
+    full = !full;
+    peek.setAttribute('aria-pressed', String(full));
+    if (peekLabel) peekLabel.textContent = full ? 'Back' : 'Up close';
+    peek.classList.toggle('is-full', full);
+    if (hint) hint.textContent = full ? 'This is me, up close.' : 'Hover to look closer ↓';
+    reveal?.setAttribute('aria-hidden', String(!full));
+    ring?.classList.remove('on');
+    setClip(full ? 'circle(150% at 50% 50%)' : 'circle(0px at 50% 50%)');
+  });
+
+  // Ten tricks, one at random each time (never the same twice in a row).
+  const tricks: [string, string][] = [
+    ['t-spin', 'The Owl (head spin)'],
+    ['t-jelly', 'The Jelly'],
+    ['t-bounce', 'The Bounce'],
+    ['t-shake', 'The Head Shake'],
+    ['t-flip', 'The Backflip'],
+    ['t-tada', 'The Ta Da'],
+    ['t-peek', 'The Peekaboo'],
+    ['t-wink', 'The Wink'],
+    ['t-brows', 'The Eyebrow Dance'],
+    ['t-vanish', 'The Vanishing Act'],
+  ];
+  const btn = document.querySelector<HTMLButtonElement>('.trick');
+  const label = document.querySelector<HTMLElement>('.trick-label');
+  let busy = false;
+  let last = -1;
+
+  function doTrick() {
+    if (!btn || busy) return;
+    let n = Math.floor(Math.random() * tricks.length);
+    if (n === last) n = (n + 1 + Math.floor(Math.random() * (tricks.length - 1))) % tricks.length;
+    last = n;
+    busy = true;
+    btn.classList.add(tricks[n][0]);
+    if (label) label.textContent = `Trick ${n + 1} of 10: ${tricks[n][1]}`;
+    window.setTimeout(() => {
+      btn.classList.remove(tricks[n][0]);
+      busy = false;
+    }, 1250);
+  }
+  btn?.addEventListener('mouseenter', doTrick);
+  btn?.addEventListener('click', doTrick);
+</script>
 
 <style>
   .about {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) clamp(12rem, 27vw, 20rem);
-    grid-template-areas:
-      'title photo'
-      'prose photo';
-    column-gap: 4rem;
-    align-items: start;
-    padding-top: 4rem;
+    min-height: calc(100vh - 116px);
+    min-height: calc(100svh - 116px);
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 28px;
   }
-  h1 {
-    grid-area: title;
-    margin-bottom: 1.2rem;
-    font-size: clamp(2.4rem, 5vw, 3.5rem);
-  }
-  .prose {
-    grid-area: prose;
-    max-width: 40rem;
-    font-size: 1.0625rem;
-    line-height: 1.75;
-  }
-  .elsewhere {
+  .poster {
+    flex: 1 1 auto;
     display: flex;
     flex-wrap: wrap;
-    gap: 0.6rem 1.6rem;
-    margin-top: 2.4rem;
-    padding-top: 1.3rem;
-    border-top: 1px solid var(--rule);
-    font-size: 0.85rem;
+    align-items: center;
+    gap: 32px 0;
   }
 
-  /* The portrait: greyscale, fading into the page at the bottom,
-     and it takes on its true colour when pointed at. */
-  .portrait {
-    grid-area: photo;
-    margin: 0.7rem 0 0;
+  /* Left: name with the lens reveal */
+  .intro {
+    flex: 1 1 360px;
+    padding-right: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
   }
-  .portrait :global(img) {
+  .hint-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--smoke);
+  }
+  .peek {
+    min-height: 36px;
+    padding: 0 12px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--white);
+    font-family: var(--mono);
+    font-size: 12px;
+    transition: background 0.2s, color 0.2s;
+  }
+  .peek:hover,
+  .peek.is-full {
+    background: var(--white);
+    color: var(--ink);
+  }
+  .lens-area {
+    position: relative;
+    overflow: hidden;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .lens-area {
+      cursor: none;
+    }
+  }
+  .layer {
+    padding: 20px 0 24px;
+  }
+  h1,
+  .reveal-title {
+    margin: 0;
+    font-weight: 800;
+    font-size: clamp(64px, 7vw, 116px);
+    line-height: 0.86;
+    letter-spacing: -0.055em;
+  }
+  .lede {
+    margin-top: 20px;
+    max-width: 380px;
+    font-size: 19px;
+    line-height: 1.45;
+    color: var(--muted);
+  }
+  .reveal {
+    position: absolute;
+    inset: 0;
+    background: var(--red);
+    color: var(--ink);
+    clip-path: circle(0px at 50% 50%);
+    transition: clip-path 0.12s ease-out;
+    pointer-events: none;
+  }
+  .reveal .lede {
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .white {
+    color: var(--white);
+  }
+  .ring {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 180px;
+    height: 180px;
+    margin: -90px 0 0 -90px;
+    border: 9px solid var(--white);
+    border-radius: 50%;
+    pointer-events: none;
+    display: none;
+  }
+  .ring.on {
+    display: block;
+  }
+  .ring span {
+    position: absolute;
+    width: 16px;
+    height: 70px;
+    background: var(--white);
+    right: -30px;
+    bottom: -62px;
+    transform: rotate(-45deg);
+  }
+
+  /* Middle: the character */
+  .figure {
+    flex: 1 1 340px;
+    display: flex;
+    justify-content: center;
+  }
+  .bob {
+    width: clamp(260px, 26vw, 400px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    animation: bob 5s ease-in-out infinite;
+  }
+  @keyframes bob {
+    0%,
+    100% {
+      transform: translateY(0) rotate(0);
+    }
+    50% {
+      transform: translateY(-10px) rotate(-1.5deg);
+    }
+  }
+  .trick {
     display: block;
     width: 100%;
-    height: auto;
-    aspect-ratio: 4 / 5;
-    object-fit: cover;
-    object-position: 50% 22%;
-    filter: grayscale(1) contrast(1.05);
-    -webkit-mask-image: linear-gradient(to bottom, #000 62%, transparent 100%);
-    mask-image: linear-gradient(to bottom, #000 62%, transparent 100%);
-    transition: filter 0.5s ease;
+    padding: 0;
+    border: 0;
+    background: transparent;
   }
-  .portrait :global(img:hover) {
-    filter: grayscale(0) contrast(1.02);
+  .trick:focus-visible {
+    outline: 3px solid var(--white);
+    outline-offset: 6px;
+    border-radius: 50%;
   }
-  :global(:root[data-theme='dark']) .portrait :global(img) {
-    filter: grayscale(1) brightness(0.82) contrast(1.05);
-  }
-  :global(:root[data-theme='dark']) .portrait :global(img:hover) {
-    filter: grayscale(0) brightness(0.9) contrast(1.02);
+  .trick-label {
+    font-size: 12px;
+    color: var(--smoke);
   }
 
-  @media (max-width: 760px) {
-    .about {
-      grid-template-columns: minmax(0, 1fr);
-      grid-template-areas:
-        'title'
-        'photo'
-        'prose';
-      padding-top: 3rem;
+  /* Trick animations, done by the character inside the disc. */
+  .trick :global(.char),
+  .trick :global(.head),
+  .trick :global(.eye-r),
+  .trick :global(.brows) {
+    transform-box: fill-box;
+  }
+  .trick :global(.char) {
+    transform-origin: 50% 100%;
+  }
+  .trick :global(.head) {
+    transform-origin: 50% 85%;
+  }
+  .trick :global(.eye-r),
+  .trick :global(.brows) {
+    transform-origin: center;
+  }
+  .t-spin :global(.head) {
+    animation: tSpin 1s cubic-bezier(0.5, 0, 0.3, 1);
+  }
+  .t-jelly :global(.char) {
+    animation: tJelly 0.9s ease;
+  }
+  .t-bounce :global(.char) {
+    animation: tBounce 1s ease;
+  }
+  .t-shake :global(.head) {
+    animation: tShake 0.8s ease;
+  }
+  .t-flip :global(.char) {
+    transform-origin: 50% 50%;
+    animation: tFlip 1.1s ease;
+  }
+  .t-tada :global(.char) {
+    animation: tTada 1s ease;
+  }
+  .t-peek :global(.char) {
+    animation: tPeek 1.2s ease;
+  }
+  .t-wink :global(.head) {
+    animation: tTilt 1s ease;
+  }
+  .t-wink :global(.eye-r) {
+    animation: tWink 1s ease;
+  }
+  .t-brows :global(.char) {
+    animation: tLean 1s ease;
+  }
+  .t-brows :global(.brows) {
+    animation: tBrows 1s ease;
+  }
+  .t-vanish :global(.char) {
+    transform-origin: 50% 50%;
+    animation: tVanish 1.1s ease-in-out;
+  }
+  @keyframes tSpin {
+    to {
+      transform: rotate(360deg);
     }
-    .portrait {
-      width: 14rem;
-      margin: 0.2rem 0 1.8rem;
+  }
+  @keyframes tJelly {
+    0%,
+    100% {
+      transform: scale(1, 1);
+    }
+    30% {
+      transform: scale(1.2, 0.78);
+    }
+    40% {
+      transform: scale(0.82, 1.2);
+    }
+    50% {
+      transform: scale(1.12, 0.88);
+    }
+    65% {
+      transform: scale(0.95, 1.05);
+    }
+    75% {
+      transform: scale(1.04, 0.96);
+    }
+  }
+  @keyframes tBounce {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    20% {
+      transform: translateY(-110px);
+    }
+    40% {
+      transform: translateY(0) scale(1.06, 0.94);
+    }
+    55% {
+      transform: translateY(-45px);
+    }
+    70% {
+      transform: translateY(0);
+    }
+    82% {
+      transform: translateY(-14px);
+    }
+  }
+  @keyframes tShake {
+    0%,
+    100% {
+      transform: translateX(0) rotate(0);
+    }
+    10%,
+    30%,
+    50%,
+    70% {
+      transform: translateX(-10px) rotate(-7deg);
+    }
+    20%,
+    40%,
+    60%,
+    80% {
+      transform: translateX(10px) rotate(7deg);
+    }
+  }
+  @keyframes tFlip {
+    0% {
+      transform: translateY(0) rotate(0);
+    }
+    30% {
+      transform: translateY(-100px) rotate(0);
+    }
+    70% {
+      transform: translateY(-100px) rotate(360deg);
+    }
+    100% {
+      transform: translateY(0) rotate(360deg);
+    }
+  }
+  @keyframes tTada {
+    0%,
+    100% {
+      transform: scale(1) rotate(0);
+    }
+    10%,
+    20% {
+      transform: scale(0.92) rotate(-4deg);
+    }
+    30%,
+    50%,
+    70%,
+    90% {
+      transform: scale(1.1) rotate(4deg);
+    }
+    40%,
+    60%,
+    80% {
+      transform: scale(1.1) rotate(-4deg);
+    }
+  }
+  @keyframes tPeek {
+    0% {
+      transform: translateY(0);
+    }
+    30%,
+    55% {
+      transform: translateY(330px);
+    }
+    72% {
+      transform: translateY(-36px);
+    }
+    86% {
+      transform: translateY(8px);
+    }
+    100% {
+      transform: translateY(0);
+    }
+  }
+  @keyframes tTilt {
+    0%,
+    100% {
+      transform: rotate(0);
+    }
+    30%,
+    70% {
+      transform: rotate(-10deg);
+    }
+  }
+  @keyframes tWink {
+    0%,
+    100% {
+      transform: scaleY(1);
+    }
+    30%,
+    60% {
+      transform: scaleY(0.1);
+    }
+  }
+  @keyframes tLean {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+  @keyframes tBrows {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    20%,
+    40%,
+    60%,
+    80% {
+      transform: translateY(-12px);
+    }
+    30%,
+    50%,
+    70% {
+      transform: translateY(0);
+    }
+  }
+  @keyframes tVanish {
+    0% {
+      transform: scale(1) rotate(0);
+      opacity: 1;
+    }
+    45%,
+    55% {
+      transform: scale(0) rotate(-180deg);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1) rotate(-360deg);
+      opacity: 1;
+    }
+  }
+
+  /* Right: what I do */
+  .doing {
+    flex: 1 1 340px;
+    padding-left: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .small {
+    font-size: 13px;
+    color: var(--smoke);
+  }
+  .doing ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-weight: 800;
+    font-size: clamp(26px, 2.4vw, 38px);
+    line-height: 1.04;
+    letter-spacing: -0.04em;
+    color: var(--red);
+  }
+
+  /* Bottom strip */
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px 0;
+    margin-top: 32px;
+    border-top: 1px solid var(--border);
+    padding-top: 20px;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .fact {
+    flex: 1 1 220px;
+    padding-right: 24px;
+  }
+  .k {
+    color: var(--smoke);
+    margin-bottom: 8px;
+  }
+  .facts a {
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .facts a:hover {
+    color: var(--red);
+  }
+  .ask {
+    font-family: var(--font);
+    font-weight: 800;
+    font-size: 26px;
+    letter-spacing: -0.03em;
+    color: var(--red);
+  }
+  .facts a.ask:hover {
+    color: var(--white);
+  }
+
+  .mob-only {
+    display: none;
+  }
+
+  /* Phone: avatar first, then name, then the list. */
+  @media (max-width: 760px) {
+    .desk-only {
+      display: none !important;
+    }
+    .mob-only {
+      display: inline;
+    }
+    .about {
+      min-height: 0;
+      padding-bottom: 40px;
+    }
+    .poster {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0;
+    }
+    .figure {
+      order: -1;
+      flex: none;
+      padding-top: 48px;
+    }
+    .bob {
+      width: 260px;
+      gap: 12px;
+      animation: none;
+    }
+    .trick-label {
+      font-size: 11px;
+    }
+    .intro {
+      flex: none;
+      padding: 32px 0 0;
+      gap: 0;
+    }
+    .hint-row {
+      order: 2;
+    }
+    .hint {
+      display: none;
+    }
+    .peek {
+      margin-top: 14px;
+      min-height: 40px;
+      padding: 0 14px;
+    }
+    .layer {
+      padding: 0;
+    }
+    .reveal .layer {
+      padding: 0 0 4px;
+    }
+    h1,
+    .reveal-title {
+      font-size: 72px;
+    }
+    .lede {
+      margin-top: 16px;
+      font-size: 18px;
+    }
+    .doing {
+      flex: none;
+      padding: 40px 0 0;
+      gap: 12px;
+    }
+    .small {
+      font-size: 12px;
+    }
+    .doing ul {
+      font-size: 30px;
+    }
+    .facts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px 16px;
+      margin-top: 40px;
+      padding-top: 18px;
+      font-size: 12px;
+    }
+    .fact {
+      padding-right: 0;
+    }
+    .k {
+      margin-bottom: 6px;
+    }
+    .site {
+      grid-column: 1 / -1;
+      order: 3;
+    }
+    .hello {
+      grid-column: 1 / -1;
+      order: 4;
+    }
+    .hello .k {
+      display: none;
+    }
+    .facts a.ask {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      background: var(--red);
+      color: var(--white);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bob {
+      animation: none;
+    }
+    [class*='t-'] :global(*) {
+      animation: none !important;
     }
   }
 </style>

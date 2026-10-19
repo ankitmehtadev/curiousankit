@@ -1,0 +1,37 @@
+---
+// A level heading for rabbit holes. The depth meter picks these up by itself.
+//   <Level n={1} title="The obvious answer" />
+//   <Level n={2} title="What the research says" />
+//   <Level n={3} title="The real reason" />
+// Change the small label with label="..." if you like.
+interface Props {
+  n: 1 | 2 | 3;
+  title: string;
+  label?: string;
+}
+const NAMES: Record<number, string> = { 1: 'One step down', 2: 'Deeper', 3: 'Rock bottom' };
+const SHORT: Record<number, string> = { 1: 'Level 1', 2: 'Level 2', 3: 'Bottom' };
+const { n, title, label = NAMES[n] } = Astro.props;
+---
+
+<h2 id={`l${n}`} class="level-h" data-meter={SHORT[n]} data-meter-name={label}>
+  <span class="level-label">Level {n} · {label}</span>{title}
+</h2>
+
+<style>
+  .level-label {
+    display: block;
+    margin-bottom: 10px;
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 13px;
+    letter-spacing: 0;
+    color: var(--red);
+  }
+  @media (max-width: 640px) {
+    .level-label {
+      font-size: 11px;
+      margin-bottom: 8px;
+    }
+  }
+</style>

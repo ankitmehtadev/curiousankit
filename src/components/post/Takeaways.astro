@@ -1,0 +1,81 @@
+---
+// A numbered list with big red numbers. Used for Takeaways and for "Climbing back out".
+interface Props {
+  items: string[];
+  label?: string;
+  bare?: boolean; // no rule and label (when a heading sits above it)
+}
+const { items, label = 'Takeaways', bare = false } = Astro.props;
+---
+
+{
+  items.length > 0 && (
+    <section class:list={['takeaways', { bare }]} aria-label={label}>
+      {!bare && <div class="tk-label">{label}</div>}
+      <ol>
+        {items.map((item, i) => (
+          <li>
+            <span class="n">{i + 1}</span>
+            <span>{item}</span>
+          </li>
+        ))}
+      </ol>
+    </section>
+  )
+}
+
+<style>
+  .takeaways {
+    margin: 56px 0 0;
+    border-top: 1px solid var(--white);
+    padding-top: 20px;
+    font-size: 20px;
+    line-height: 1.6;
+    color: var(--body);
+  }
+  .takeaways.bare {
+    margin: 0;
+    border: 0;
+    padding: 0;
+  }
+  .tk-label {
+    margin-bottom: 16px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--smoke);
+  }
+  ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  li {
+    display: flex;
+    gap: 16px;
+  }
+  .n {
+    flex: 0 0 auto;
+    font-weight: 800;
+    color: var(--red);
+  }
+  @media (max-width: 640px) {
+    .takeaways {
+      margin-top: 40px;
+      padding-top: 16px;
+      font-size: 18px;
+    }
+    .tk-label {
+      font-size: 11px;
+      margin-bottom: 12px;
+    }
+    ol {
+      gap: 10px;
+    }
+    li {
+      gap: 12px;
+    }
+  }
+</style>

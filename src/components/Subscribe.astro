@@ -1,74 +1,132 @@
 ---
-import { SUBSCRIBE_ACTION } from '../consts';
+// The big "Curious things, straight to your inbox." block. Used on Home, the stream pages and /subscribe.
+import { LINKS, SUBSCRIBE_ACTION, SUBSCRIBE_FIELD } from '../consts';
+
+interface Props {
+  label?: string;
+  aside?: string;
+  id?: string;
+  // The big line, with its last words in red: pitch + accent.
+  pitch?: string;
+  accent?: string;
+}
+const {
+  label = 'Notes by email',
+  aside = 'No spam. Unsubscribe anytime.',
+  id = 'subscribe',
+  pitch = 'Curious things, straight to your',
+  accent = 'inbox.',
+} = Astro.props;
+const inputId = `${id}-email`;
 ---
 
-{
-  SUBSCRIBE_ACTION && (
-    <section class="subscribe">
-      <div class="wrap inner">
-        <h2>Get new notes by email</h2>
-        <p>One short email when something new is published. No noise.</p>
-        <form action={SUBSCRIBE_ACTION} method="post" target="_blank">
-          <label class="sr-only" for="subscribe-email">
-            Email address
-          </label>
-          <input id="subscribe-email" type="email" name="email" placeholder="you@example.com" required />
-          <button type="submit">Subscribe</button>
-        </form>
+<section id={id} class="subscribe" aria-label="Subscribe">
+  <div class="label-row"><span>{label}</span><span>{aside}</span></div>
+  <div class="body">
+    <p class="pitch">{pitch} <span class="red">{accent}</span></p>
+    <form
+      class="sub-form"
+      action={SUBSCRIBE_ACTION || undefined}
+      method="post"
+      target={SUBSCRIBE_ACTION ? '_blank' : undefined}
+      data-fallback={SUBSCRIBE_ACTION ? undefined : LINKS.email}
+    >
+      <label for={inputId} class="mono">Your email</label>
+      <div class="line">
+        <input id={inputId} type="email" name={SUBSCRIBE_FIELD} placeholder="you@example.com" required autocomplete="email" />
+        <button type="submit" class="btn">Subscribe</button>
       </div>
-    </section>
-  )
-}
+    </form>
+  </div>
+</section>
+
+<script>
+  // Until a newsletter service is set up, a sign up opens an email to Ankit instead.
+  document.querySelectorAll<HTMLFormElement>('form.sub-form').forEach((form) => {
+    form.addEventListener('submit', (e) => {
+      const button = form.querySelector('button');
+      const to = form.dataset.fallback;
+      if (to) {
+        e.preventDefault();
+        const email = (form.querySelector('input') as HTMLInputElement).value;
+        location.href = `mailto:${to}?subject=${encodeURIComponent('Subscribe me')}&body=${encodeURIComponent('Please add ' + email + ' to the Curious Ankit list.')}`;
+      }
+      if (button) button.textContent = 'Thanks!';
+    });
+  });
+</script>
 
 <style>
   .subscribe {
-    padding: 4.5rem 0 1rem;
-    text-align: center;
+    border-top: 1px solid var(--white);
+    padding: 20px 0 120px;
   }
-  h2 {
-    margin-bottom: 0.4rem;
-    font-size: 2.1rem;
+  .body {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 40px 48px;
+    padding-top: 64px;
   }
-  p {
-    margin-bottom: 1.4rem;
-    font-size: 0.92rem;
+  .pitch {
+    flex: 3 1 560px;
+    font-weight: 800;
+    font-size: var(--big);
+    line-height: 0.88;
+    letter-spacing: -0.055em;
   }
   form {
+    flex: 2 1 380px;
     display: flex;
-    justify-content: center;
-    gap: 0.5rem;
+    flex-direction: column;
+    gap: 12px;
+  }
+  label {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .line {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    border-bottom: 2px solid var(--white);
   }
   input {
-    width: 17rem;
-    max-width: 100%;
-    padding: 0.62rem 0.8rem;
-    border: 1px solid var(--ink);
-    border-radius: 0;
-    font: inherit;
-    font-size: 0.85rem;
-    background: var(--paper);
-    color: var(--ink);
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 56px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--white);
+    font-weight: 500;
+    font-size: 26px;
+    letter-spacing: -0.02em;
+    outline: none;
   }
-  button {
-    padding: 0.62rem 1.1rem;
-    border: 1px solid var(--ink);
-    border-radius: 0;
-    background: var(--ink);
-    color: var(--paper);
-    font: inherit;
-    font-size: 0.85rem;
-    cursor: pointer;
+  input::placeholder {
+    color: #5e5e5a;
   }
-  button:hover {
-    opacity: 0.85;
+  .btn {
+    flex: 0 0 auto;
+    margin-bottom: 8px;
   }
-  @media (max-width: 520px) {
+  @media (max-width: 640px) {
+    .subscribe {
+      padding-bottom: 72px;
+    }
+    .body {
+      padding-top: 32px;
+    }
+    .pitch {
+      flex-basis: 100%;
+      font-size: 48px;
+    }
     form {
-      flex-direction: column;
-      align-items: stretch;
+      flex-basis: 100%;
     }
     input {
-      width: 100%;
+      font-size: 20px;
     }
   }
 </style>

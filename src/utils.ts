@@ -6,24 +6,33 @@ export function sortNotes(notes: Note[]): Note[] {
   return [...notes].sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 }
 
-// Each post lives under the address of its own section:
-// /notes/..., /experiments/... or /learning/...
-export function noteUrl(note: Note): string {
-  return `${categoryUrl(note.data.category)}/${note.id}/`;
+export const isExperiment = (n: Note) => n.data.stream === 'AI Journey' && n.data.format === 'Experiment';
+export const isAINote = (n: Note) => n.data.stream === 'AI Journey' && n.data.format !== 'Experiment';
+export const isRabbit = (n: Note) => n.data.stream === 'Rabbit Holes';
+
+// Addresses:
+//   AI notes        /notes/<slug>/
+//   AI experiments  /experiments/<slug>/
+//   Rabbit holes    /rabbit-holes/<slug>/
+export function sectionOf(n: Note): 'notes' | 'experiments' | 'rabbit-holes' {
+  if (isRabbit(n)) return 'rabbit-holes';
+  return isExperiment(n) ? 'experiments' : 'notes';
 }
 
-export function sectionOf(note: Note): string {
-  return categoryUrl(note.data.category).slice(1);
+export function noteUrl(n: Note): string {
+  return `/${sectionOf(n)}/${n.id}/`;
 }
 
-const CATEGORY_URLS: Record<string, string> = {
-  Notes: '/notes',
-  Experiments: '/experiments',
-  Learning: '/learning',
-};
+// Exp. 001
+export function expLabel(n?: number): string {
+  return `Exp. ${String(n ?? 0).padStart(3, '0')}`;
+}
 
-export function categoryUrl(category: string): string {
-  return CATEGORY_URLS[category] ?? '/notes';
+// The small label used in lists: "Note", "Exp. 001 · Done", "Mind"
+export function kindLabel(n: Note): string {
+  if (isRabbit(n)) return n.data.topic;
+  if (isExperiment(n)) return `${expLabel(n.data.exp)}${n.data.status ? ' · ' + n.data.status : ''}`;
+  return 'Note';
 }
 
 export function readingTime(body = ''): number {
@@ -31,10 +40,15 @@ export function readingTime(body = ''): number {
   return Math.max(1, Math.round(words / 220));
 }
 
+// 4 Oct 2026
 export function formatDate(date: Date, withYear = true): string {
   return date.toLocaleDateString('en-AU', {
     day: 'numeric',
-    month: 'long',
+    month: 'short',
     ...(withYear ? { year: 'numeric' } : {}),
-  });
+  }).replace('Sept', 'Sep');
+}
+
+export function isoDate(date: Date): string {
+  return date.toISOString().slice(0, 10);
 }

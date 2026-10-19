@@ -1,0 +1,74 @@
+---
+// An image with a numbered caption.
+//   import sketch from '../../assets/my-sketch.png';
+//   <Figure src={sketch} alt="What the image shows" n={1} caption="What to notice." />
+// src can be an imported image (optimised for you) or a plain address such as '/images/x.png'.
+// Leave src out to show a placeholder box while drafting.
+import type { ImageMetadata } from 'astro';
+import { Image } from 'astro:assets';
+
+interface Props {
+  src?: ImageMetadata | string;
+  alt?: string;
+  caption?: string;
+  n?: number;
+}
+const { src, alt = '', caption, n } = Astro.props;
+---
+
+<figure class="fig">
+  {
+    !src ? (
+      <div class="fig-empty">[Screenshot, sketch or chart]</div>
+    ) : typeof src === 'string' ? (
+      <img src={src} alt={alt} loading="lazy" />
+    ) : (
+      <Image src={src} alt={alt} widths={[480, 720, 1080, 1440]} sizes="(max-width: 760px) 100vw, 720px" />
+    )
+  }
+  {
+    (caption || n) && (
+      <figcaption>
+        {n ? `Fig. ${n}` : ''}
+        {n && caption ? ' · ' : ''}
+        {caption}
+      </figcaption>
+    )
+  }
+</figure>
+
+<style>
+  .fig {
+    margin: 40px 0;
+  }
+  .fig :global(img) {
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--border);
+  }
+  .fig-empty {
+    aspect-ratio: 16 / 9;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--smoke);
+  }
+  figcaption {
+    margin-top: 10px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--smoke);
+  }
+  @media (max-width: 640px) {
+    .fig {
+      margin: 28px 0;
+    }
+    .fig-empty {
+      aspect-ratio: 4 / 3;
+    }
+  }
+</style>

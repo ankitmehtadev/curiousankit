@@ -1,0 +1,849 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import { SITE_TITLE } from '../consts';
+import { expLabel, isExperiment, isoDate, noteUrl, sortNotes } from '../utils';
+
+const posts = sortNotes(await getCollection('blog'));
+const MS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MF = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+const total = posts.length;
+const ai = posts.filter((p) => p.data.stream === 'AI Journey').length;
+const rh = total - ai;
+const exps = posts.filter(isExperiment).length;
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+const expBit = exps === 0 ? '' : ai === exps ? (exps === 1 ? ' (an experiment)' : ' (all experiments)') : ` (${plural(exps, 'of them an experiment', 'of them experiments')})`;
+const summary = `${plural(total, 'note', 'notes')} and counting, newest first. ${ai} from the AI Journey${expBit}, ${rh} from Rabbit Holes. Search it, filter it, or tap a month below.`;
+const summaryShort = `${plural(total, 'note', 'notes')}, newest first. ${ai} AI Journey (${plural(exps, 'experiment', 'experiments')}), ${rh} Rabbit Holes.`;
+
+// One entry per post, with everything the filters need.
+const items = posts.map((p) => {
+  const d = isoDate(p.data.pubDate);
+  const x = isExperiment(p);
+  return {
+    p,
+    d,
+    month: d.slice(0, 7),
+    day: d.slice(8, 10),
+    x,
+    fmt: x ? 'Experiments' : 'Notes',
+    text: [p.data.title, p.data.description, p.data.topic, p.data.stream, ...(p.data.tags ?? [])].join(' ').toLowerCase(),
+  };
+});
+
+// Writing calendar: the last 12 months up to this month, plus any older month that has posts.
+const now = new Date();
+const monthKey = (y: number, m: number) => `${y}-${String(m + 1).padStart(2, '0')}`;
+const keys = new Set<string>();
+for (let i = 11; i >= 0; i--) {
+  const dt = new Date(now.getFullYear(), now.getMonth() - i, 1);
+  keys.add(monthKey(dt.getFullYear(), dt.getMonth()));
+}
+items.forEach((it) => keys.add(it.month));
+const byDay = new Map<string, typeof items>();
+items.forEach((it) => byDay.set(it.d, [...(byDay.get(it.d) ?? []), it]));
+const months = [...keys].sort().map((k) => {
+  const y = +k.slice(0, 4);
+  const m = +k.slice(5, 7) - 1;
+  const first = (new Date(y, m, 1).getDay() + 6) % 7; // Monday first
+  const days = new Date(y, m + 1, 0).getDate();
+  const cells: { blank?: boolean; ds?: string; list?: typeof items }[] = [];
+  for (let i = 0; i < first; i++) cells.push({ blank: true });
+  for (let d = 1; d <= days; d++) {
+    const ds = `${k}-${String(d).padStart(2, '0')}`;
+    cells.push({ ds, list: byDay.get(ds) });
+  }
+  return { k, label: `${MS[m]} ${String(y).slice(2)}`, full: `${MF[m]} ${y}`, n: items.filter((it) => it.month === k).length, cells };
+});
+
+// Month groups for the list, newest first.
+const groups: { key: string; mon: string; full: string; items: typeof items }[] = [];
+items.forEach((it) => {
+  let g = groups.find((x) => x.key === it.month);
+  if (!g) {
+    const m = +it.month.slice(5, 7) - 1;
+    g = { key: it.month, mon: MS[m], full: `${MF[m]} ${it.month.slice(0, 4)}`, items: [] };
+    groups.push(g);
+  }
+  g.items.push(it);
+});
+
+const topics = Array.from(new Set(items.map((it) => it.p.data.topic)));
+const topicAttr = (t: string, key: 'stream' | 'fmt') =>
+  Array.from(new Set(items.filter((it) => it.p.data.topic === t).map((it) => (key === 'stream' ? it.p.data.stream : it.fmt)))).join('|');
+---
+
+<Base title={`Archive | ${SITE_TITLE}`} description="Every note on Curious Ankit, newest first. Search it, filter it, or pick a month.">
+  <div class="wrap">
+    <section class="intro">
+      <h1>Every <span class="red">note.</span></h1>
+      <p class="mono sum"><span class="long">{summary}</span><span class="short">{summaryShort}</span></p>
+    </section>
+
+    <section class="cal" aria-label="Writing calendar">
+      <div class="mono cal-head">
+        <span><span class="long">Writing calendar · each square is a day</span><span class="short">Writing calendar · swipe → · tap a month</span></span>
+        <span class="key">
+          <span><span class="k sq red-bg"></span>AI Journey</span>
+          <span><span class="k sq white-bg"></span>Rabbit Holes</span>
+          <span><span class="k ring"></span>Round = experiment</span>
+        </span>
+      </div>
+      <div class="months">
+        {
+          months.map((m) => (
+            <div class="month">
+              <button type="button" class="mon" data-month={m.k} aria-pressed="false" disabled={m.n === 0} aria-label={`${m.full}, ${plural(m.n, 'note', 'notes')}`}>
+                {m.label}
+                <sup class="mono">{m.n}</sup>
+              </button>
+              <div class="days">
+                {m.cells.map((c) => {
+                  if (c.blank) return <span />;
+                  if (!c.list) return <span class="day-empty" aria-hidden="true" />;
+                  const lead = c.list.find((it) => it.x) ?? c.list[0];
+                  const label = `${m.full.split(' ')[0]} ${+c.ds!.slice(8)}: ${c.list
+                    .map((it) => (it.x ? `Experiment ${it.p.data.exp}, ` : '') + it.p.data.title)
+                    .join('; ')}`;
+                  return (
+                    <button
+                      type="button"
+                      class:list={['day', lead.p.data.stream === 'AI Journey' ? 'ai' : 'rh', lead.x && 'round']}
+                      data-day={c.ds}
+                      title={c.list.map((it) => it.p.data.title).join(' · ')}
+                      aria-label={label}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <div class="filters">
+      <div class="search">
+        <svg width="22" height="22" viewBox="0 0 28 28" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><circle cx="11" cy="11" r="8"></circle><path d="M17 17 25 25"></path></svg>
+        <label for="search" class="sr-only">Search notes</label>
+        <input id="search" type="search" placeholder="Search every note…" autocomplete="off" />
+      </div>
+      <div class="group" role="group" aria-label="Filter by stream">
+        <span class="mono glabel">Stream</span>
+        <div class="chips">
+          {['All', 'AI Journey', 'Rabbit Holes'].map((l, i) => (
+            <button type="button" class="chip" data-stream={l} aria-pressed={i === 0 ? 'true' : 'false'}>{l}</button>
+          ))}
+        </div>
+      </div>
+      <div class="group" role="group" aria-label="Filter by format">
+        <span class="mono glabel">Format</span>
+        <div class="chips">
+          {['All', 'Notes', 'Experiments'].map((l, i) => (
+            <button type="button" class="chip" data-fmt={l} aria-pressed={i === 0 ? 'true' : 'false'}>{l}</button>
+          ))}
+        </div>
+      </div>
+      <button type="button" class="mono topic-toggle" aria-expanded="false" aria-controls="topic-group">
+        Topic filters ({topics.length}) <span aria-hidden="true">↓</span>
+      </button>
+      <div class="group topics-group" id="topic-group" role="group" aria-label="Filter by topic">
+        <span class="mono glabel">Topic</span>
+        <div class="chips">
+          <button type="button" class="chip" data-topic="All" aria-pressed="true">All</button>
+          {topics.map((t) => (
+            <button type="button" class="chip" data-topic={t} data-streams={topicAttr(t, 'stream')} data-fmts={topicAttr(t, 'fmt')} aria-pressed="false">
+              {t}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div class="status mono" hidden>
+        <span class="showing"></span>
+        <button type="button" class="clear">Clear filters ✕</button>
+      </div>
+    </div>
+
+    <section class="groups" aria-label="Notes by month">
+      {
+        groups.map((g) => (
+          <div class="mgroup" data-group={g.key}>
+            <div class="mhead">
+              <div class="sticky">
+                <div class="mon-big">{g.mon}</div>
+                <div class="mono mfull">
+                  {g.full} · <span class="mcount">{plural(g.items.length, 'note', 'notes')}</span>
+                </div>
+              </div>
+            </div>
+            <div class="mitems">
+              {g.items.map((it) => (
+                <a
+                  href={noteUrl(it.p)}
+                  class="row"
+                  data-stream={it.p.data.stream}
+                  data-fmt={it.fmt}
+                  data-topic={it.p.data.topic}
+                  data-month={it.month}
+                  data-day={it.d}
+                  data-text={it.text}
+                >
+                  <span class="mono rday">{it.day}</span>
+                  <span class="rt">{it.p.data.title}</span>
+                  <span class="mono rmeta">
+                    <span class:list={['mark', it.p.data.stream === 'AI Journey' ? 'red-bg' : 'white-bg', it.x && 'round']} />
+                    {it.p.data.stream} · {it.p.data.topic}
+                    {it.x && (
+                      <span class="expb">
+                        {expLabel(it.p.data.exp)}
+                        {it.p.data.status ? ` · ${it.p.data.status}` : ''}
+                      </span>
+                    )}
+                  </span>
+                  <span class="ra" aria-hidden="true">→</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        ))
+      }
+      <p class="empty" hidden={total > 0}>
+        Nothing here yet. Maybe that's my next rabbit hole. <a href="/contact/">Suggest it →</a>
+      </p>
+    </section>
+  </div>
+</Base>
+
+<script>
+  const total = document.querySelectorAll('.row').length;
+  const state = { q: '', stream: 'All', fmt: 'All', topic: 'All', month: '', sel: '' };
+  const MF = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+  const $ = <T extends Element = HTMLElement>(s: string) => Array.from(document.querySelectorAll<T>(s) as NodeListOf<any>) as T[];
+  const search = document.getElementById('search') as HTMLInputElement;
+  const status = document.querySelector<HTMLElement>('.status')!;
+  const showing = status.querySelector<HTMLElement>('.showing')!;
+  const empty = document.querySelector<HTMLElement>('.groups .empty')!;
+
+  function apply() {
+    const q = state.q.trim().toLowerCase();
+    $<HTMLButtonElement>('[data-stream].chip').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.stream === state.stream)));
+    $<HTMLButtonElement>('[data-fmt].chip').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.fmt === state.fmt)));
+    $<HTMLButtonElement>('[data-topic].chip').forEach((b) => {
+      const t = b.dataset.topic;
+      const fits =
+        t === 'All' ||
+        ((state.stream === 'All' || (b.dataset.streams ?? '').split('|').includes(state.stream)) &&
+          (state.fmt === 'All' || (b.dataset.fmts ?? '').split('|').includes(state.fmt)));
+      b.hidden = !fits;
+      b.setAttribute('aria-pressed', String(t === state.topic));
+    });
+    $<HTMLButtonElement>('.mon').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.month === state.month)));
+    $<HTMLButtonElement>('.day').forEach((b) => b.classList.toggle('sel', b.dataset.day === state.sel));
+
+    let count = 0;
+    $<HTMLAnchorElement>('.row').forEach((r) => {
+      const d = r.dataset;
+      const ok =
+        (state.stream === 'All' || d.stream === state.stream) &&
+        (state.fmt === 'All' || d.fmt === state.fmt) &&
+        (state.topic === 'All' || d.topic === state.topic) &&
+        (!state.month || d.month === state.month) &&
+        (!q || (d.text ?? '').includes(q));
+      r.hidden = !ok;
+      r.classList.toggle('hi', !!state.sel && d.day === state.sel);
+      if (ok) count++;
+    });
+    $<HTMLElement>('.mgroup').forEach((g) => {
+      const visible = g.querySelectorAll('.row:not([hidden])').length;
+      g.hidden = visible === 0;
+      const c = g.querySelector('.mcount');
+      if (c) c.textContent = `${visible} ${visible === 1 ? 'note' : 'notes'}`;
+    });
+
+    const any = !!(q || state.month || state.stream !== 'All' || state.fmt !== 'All' || state.topic !== 'All');
+    status.hidden = !any;
+    const monthNote = state.month ? ` in ${MF[+state.month.slice(5, 7) - 1]} ${state.month.slice(0, 4)}` : '';
+    showing.textContent = `Showing ${count} of ${total}${monthNote}`;
+    empty.hidden = count > 0;
+  }
+
+  search.addEventListener('input', () => {
+    state.q = search.value;
+    state.sel = '';
+    apply();
+  });
+  $<HTMLButtonElement>('[data-stream].chip').forEach((b) =>
+    b.addEventListener('click', () => {
+      state.stream = b.dataset.stream ?? 'All';
+      state.topic = 'All';
+      apply();
+    }),
+  );
+  $<HTMLButtonElement>('[data-fmt].chip').forEach((b) =>
+    b.addEventListener('click', () => {
+      state.fmt = b.dataset.fmt ?? 'All';
+      state.topic = 'All';
+      if (state.fmt === 'Experiments') state.stream = 'All';
+      apply();
+    }),
+  );
+  $<HTMLButtonElement>('[data-topic].chip').forEach((b) =>
+    b.addEventListener('click', () => {
+      state.topic = b.dataset.topic ?? 'All';
+      apply();
+    }),
+  );
+  $<HTMLButtonElement>('.mon').forEach((b) =>
+    b.addEventListener('click', () => {
+      state.month = state.month === b.dataset.month ? '' : (b.dataset.month ?? '');
+      state.sel = '';
+      apply();
+    }),
+  );
+  $<HTMLButtonElement>('.day').forEach((b) =>
+    b.addEventListener('click', () => {
+      const ds = b.dataset.day ?? '';
+      Object.assign(state, { month: ds.slice(0, 7), sel: ds, q: '', stream: 'All', fmt: 'All', topic: 'All' });
+      search.value = '';
+      apply();
+      document.querySelector(`.row[data-day="${ds}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }),
+  );
+  status.querySelector('.clear')?.addEventListener('click', () => {
+    Object.assign(state, { q: '', stream: 'All', fmt: 'All', topic: 'All', month: '', sel: '' });
+    search.value = '';
+    apply();
+  });
+
+  const toggle = document.querySelector<HTMLButtonElement>('.topic-toggle');
+  const topicGroup = document.getElementById('topic-group');
+  toggle?.addEventListener('click', () => {
+    const open = toggle.getAttribute('aria-expanded') !== 'true';
+    toggle.setAttribute('aria-expanded', String(open));
+    topicGroup?.classList.toggle('open', open);
+  });
+
+  // The header search icon links here with #search.
+  function focusSearch() {
+    if (location.hash === '#search') search.focus({ preventScroll: false });
+  }
+  focusSearch();
+  window.addEventListener('hashchange', focusSearch);
+
+  // Start the calendar scrolled to the latest month.
+  const months = document.querySelector<HTMLElement>('.months');
+  if (months) months.scrollLeft = months.scrollWidth;
+
+  apply();
+</script>
+
+<style>
+  .long {
+    display: inline;
+  }
+  .short {
+    display: none;
+  }
+  .intro {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 24px 0;
+    padding: 24px 0 40px;
+  }
+  h1 {
+    flex: 3 1 560px;
+    padding-right: 32px;
+    font-size: clamp(64px, 8vw, 132px);
+    line-height: 0.86;
+    letter-spacing: -0.055em;
+  }
+  .sum {
+    flex: 2 1 300px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--muted);
+  }
+
+  .cal {
+    border-top: 1px solid var(--white);
+    padding: 24px 0 28px;
+  }
+  .cal-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+    font-size: 12px;
+    color: var(--smoke);
+  }
+  .key {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+  }
+  .key > span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .k {
+    width: 10px;
+    height: 10px;
+  }
+  .ring {
+    border-radius: 50%;
+    border: 1px solid var(--white);
+  }
+  .red-bg {
+    background: var(--red);
+  }
+  .white-bg {
+    background: var(--white);
+  }
+  .months {
+    display: flex;
+    gap: 40px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .month {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .mon {
+    align-self: flex-start;
+    padding: 0;
+    min-height: 32px;
+    border: 0;
+    background: transparent;
+    color: var(--white);
+    font-weight: 800;
+    font-size: 24px;
+    letter-spacing: -0.04em;
+    transition: color 0.2s;
+  }
+  .mon:hover:not(:disabled),
+  .mon[aria-pressed='true'] {
+    color: var(--red);
+  }
+  .mon:disabled {
+    color: #5e5e5a;
+    cursor: default;
+  }
+  .mon sup {
+    font-weight: 400;
+    font-size: 11px;
+    letter-spacing: 0;
+    margin-left: 3px;
+  }
+  .days {
+    display: grid;
+    grid-template-columns: repeat(7, 16px);
+    gap: 4px;
+  }
+  .day-empty {
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--charcoal);
+  }
+  .day {
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    transition: transform 0.15s;
+  }
+  .day.ai {
+    background: var(--red);
+  }
+  .day.rh {
+    background: var(--white);
+  }
+  .day.round {
+    border-radius: 50%;
+  }
+  .day:hover {
+    transform: scale(1.35);
+  }
+  .day.sel {
+    outline: 2px solid var(--smoke);
+    outline-offset: 2px;
+  }
+
+  .filters {
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .search {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    max-width: 760px;
+    border-bottom: 2px solid var(--white);
+    padding-bottom: 8px;
+    color: var(--red);
+  }
+  .search input {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 48px;
+    border: 0;
+    background: transparent;
+    color: var(--white);
+    font-weight: 500;
+    font-size: 26px;
+    letter-spacing: -0.02em;
+    outline: none;
+  }
+  .search input::placeholder {
+    color: #5e5e5a;
+  }
+  .search:focus-within {
+    border-bottom-color: var(--red);
+  }
+  .group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .glabel {
+    flex: 0 0 80px;
+    font-size: 12px;
+    color: var(--smoke);
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .group .chip {
+    min-height: 40px;
+    padding: 0 16px;
+    font-size: 13px;
+  }
+  .topics-group .chip {
+    min-height: 36px;
+    padding: 0 12px;
+    font-size: 12px;
+  }
+  .chip[hidden] {
+    display: none;
+  }
+  .topic-toggle {
+    display: none;
+  }
+  .status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .status[hidden] {
+    display: none;
+  }
+  .clear,
+  .topic-toggle {
+    min-height: 32px;
+    padding: 0 12px;
+    border: 1px solid var(--white);
+    background: transparent;
+    color: var(--white);
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  .clear:hover {
+    background: var(--white);
+    color: var(--ink);
+  }
+
+  .groups {
+    padding: 24px 0 120px;
+  }
+  .mgroup {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px 0;
+    padding: 40px 0 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .mgroup[hidden] {
+    display: none;
+  }
+  .mhead {
+    flex: 1 1 240px;
+    padding-right: 24px;
+  }
+  .sticky {
+    position: sticky;
+    top: 24px;
+  }
+  .mon-big {
+    font-weight: 800;
+    font-size: 110px;
+    line-height: 0.8;
+    letter-spacing: -0.06em;
+  }
+  .mfull {
+    margin-top: 14px;
+    font-size: 13px;
+    color: var(--smoke);
+  }
+  .mitems {
+    flex: 4 1 640px;
+    min-width: 0;
+  }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 0;
+    padding: 22px 12px;
+    margin: 0 -12px;
+    border-top: 1px solid var(--border);
+    color: var(--white);
+    text-decoration: none;
+    transition: background 0.2s;
+  }
+  .row[hidden] {
+    display: none;
+  }
+  .row.hi {
+    background: #1e1e1e;
+  }
+  .row.hi .rt {
+    color: var(--red);
+  }
+  .rday {
+    flex: 0 0 64px;
+    font-size: 13px;
+    color: var(--smoke);
+  }
+  .rt {
+    flex: 999 1 420px;
+    min-width: 0;
+    font-weight: 800;
+    font-size: clamp(26px, 2.6vw, 40px);
+    line-height: 0.98;
+    letter-spacing: -0.04em;
+    transition: color 0.2s;
+  }
+  .rmeta {
+    flex: 1 1 260px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 10px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .mark {
+    width: 10px;
+    height: 10px;
+  }
+  .mark.round {
+    border-radius: 50%;
+  }
+  .expb {
+    padding: 3px 8px;
+    border: 1px solid var(--red);
+    color: var(--white);
+  }
+  .ra {
+    flex: 0 0 36px;
+    font-size: 24px;
+    text-align: right;
+    transition: transform 0.2s, color 0.2s;
+  }
+  .row:hover .rt,
+  .row:hover .ra {
+    color: var(--red);
+  }
+  .row:hover .ra {
+    transform: translateX(6px);
+  }
+  .empty {
+    padding: 48px 0;
+    font-size: 22px;
+    color: var(--muted);
+  }
+  .empty a:hover {
+    color: var(--red);
+  }
+
+  @media (max-width: 640px) {
+    .long {
+      display: none;
+    }
+    .short {
+      display: inline;
+    }
+    .intro {
+      padding: 16px 0 28px;
+    }
+    h1 {
+      flex-basis: 100%;
+      padding-right: 0;
+      font-size: 64px;
+    }
+    .sum {
+      flex-basis: 100%;
+      font-size: 13px;
+    }
+    .cal {
+      padding: 16px 0 20px;
+    }
+    .cal-head {
+      font-size: 11px;
+      margin-bottom: 12px;
+    }
+    .key {
+      display: none;
+    }
+    .months {
+      gap: 28px;
+      margin: 0 calc(var(--gutter) * -1);
+      padding: 0 var(--gutter) 6px;
+    }
+    .mon {
+      font-size: 20px;
+      min-height: 28px;
+    }
+    .mon sup {
+      font-size: 10px;
+    }
+    .days {
+      grid-template-columns: repeat(7, 13px);
+      gap: 3px;
+    }
+    .day,
+    .day-empty {
+      width: 13px;
+      height: 13px;
+    }
+    .filters {
+      padding: 16px 0;
+      gap: 12px;
+    }
+    .search {
+      gap: 10px;
+      padding-bottom: 6px;
+    }
+    .search svg {
+      width: 18px;
+      height: 18px;
+    }
+    .search input {
+      min-height: 44px;
+      font-size: 20px;
+    }
+    .glabel {
+      display: none;
+    }
+    .chips {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      margin: 0 calc(var(--gutter) * -1);
+      padding: 0 var(--gutter);
+      scrollbar-width: none;
+    }
+    .group .chip {
+      flex: 0 0 auto;
+      min-height: 38px;
+      padding: 0 12px;
+      font-size: 12px;
+    }
+    .group {
+      display: block;
+    }
+    .topic-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      align-self: flex-start;
+      min-height: 40px;
+      padding: 0 14px;
+    }
+    .topics-group {
+      display: none;
+    }
+    .topics-group.open {
+      display: block;
+    }
+    .groups {
+      padding: 8px 0 48px;
+    }
+    .mgroup {
+      display: block;
+      padding: 32px 0 0;
+      border-bottom: 0;
+    }
+    .mhead {
+      padding: 0 0 8px;
+    }
+    .sticky {
+      position: static;
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+    }
+    .mon-big {
+      font-size: 64px;
+    }
+    .mfull {
+      margin-top: 0;
+      font-size: 11px;
+    }
+    .row {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+      padding: 16px 0;
+      margin: 0;
+    }
+    .row.hi {
+      padding: 16px 8px;
+      margin: 0 -8px;
+    }
+    .rday {
+      display: none;
+    }
+    .rmeta {
+      flex: none;
+      order: -1;
+      font-size: 11px;
+      gap: 8px;
+    }
+    .rmeta::before {
+      content: attr(data-day);
+    }
+    .mark {
+      width: 9px;
+      height: 9px;
+    }
+    .expb {
+      padding: 2px 6px;
+    }
+    .rt {
+      flex: none;
+      font-size: 26px;
+    }
+    .ra {
+      display: none;
+    }
+  }
+</style>

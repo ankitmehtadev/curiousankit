@@ -1,0 +1,18 @@
+---
+// A prompt or code snippet with a Copy button. Put a fenced code block inside:
+//
+// <Prompt label="Prompt I used">
+// ```text
+// Your prompt here
+// ```
+// </Prompt>
+interface Props {
+  label?: string;
+}
+const { label = 'Prompt I used' } = Astro.props;
+---
+
+<div class="prompt-box">
+  <div class="prompt-head"><span>{label}</span><button type="button" class="copy-btn" data-copy>Copy</button></div>
+  <slot />
+</div>

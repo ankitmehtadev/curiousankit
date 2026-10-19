@@ -1,0 +1,755 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE_TITLE } from '../consts';
+import { SHELF, type ShelfItem } from '../data/shelf';
+
+const ROTS = ['-2deg', '1.5deg', '-0.8deg', '2deg', '-1.6deg', '0.8deg'];
+const TYPES = [
+  { label: 'All', value: 'All' },
+  { label: 'Books', value: 'Book' },
+  { label: 'Movies', value: 'Movie' },
+  { label: 'Series', value: 'Series' },
+];
+
+const items = SHELF.map((item, i) => ({
+  ...item,
+  no: String(i + 1).padStart(3, '0'),
+  code: item.language ? item.language.slice(0, 2).toUpperCase() : '',
+  genre: item.genres[0] ?? '',
+}));
+
+// Each genre chip remembers which types carry it, so the list can follow the Type filter.
+const genreTypes = new Map<string, Set<string>>();
+for (const item of SHELF) {
+  for (const g of item.genres) {
+    if (!genreTypes.has(g)) genreTypes.set(g, new Set());
+    genreTypes.get(g)!.add(item.type);
+  }
+}
+const genres = [...genreTypes.keys()].sort((a, b) => a.localeCompare(b));
+const languages = [...new Set(SHELF.filter((i) => i.type !== 'Book' && i.language).map((i) => i.language!))].sort();
+
+const isBook = (i: ShelfItem) => i.type === 'Book';
+const description = 'Books I have read and movies and series I have watched. Every one of them comes recommended.';
+---
+
+<Base title={`Shelf | ${SITE_TITLE}`} description={description}>
+  <div class="wrap">
+    <section class="intro">
+      <h1>Read it. <span class="red">Watched it.</span></h1>
+      <p class="mono">Library cards for the books, ticket stubs for the movies and series. Every one of them comes recommended.</p>
+    </section>
+  </div>
+
+  <div class="filters">
+    <div class="frow" role="group" aria-label="Filter by type">
+      <span class="flabel">Type</span>
+      {
+        TYPES.map((t) => (
+          <button type="button" class="chip big" data-filter="type" data-value={t.value} aria-pressed={t.value === 'All' ? 'true' : 'false'}>
+            {t.label}
+          </button>
+        ))
+      }
+      <span class="count desk-count" aria-live="polite">Showing <span data-count>{items.length}</span> of {items.length}</span>
+    </div>
+    <div class="frow" role="group" aria-label="Filter by genre">
+      <span class="flabel">Genre</span>
+      <button type="button" class="chip" data-filter="genre" data-value="All" aria-pressed="true">All</button>
+      {
+        genres.map((g) => (
+          <button type="button" class="chip" data-filter="genre" data-value={g} data-types={[...genreTypes.get(g)!].join('|')} aria-pressed="false">
+            {g}
+          </button>
+        ))
+      }
+    </div>
+    {
+      languages.length > 0 && (
+        <div class="frow" role="group" aria-label="Filter by language" data-lang-row>
+          <span class="flabel">Language</span>
+          <button type="button" class="chip" data-filter="lang" data-value="All" aria-pressed="true">All</button>
+          {languages.map((l) => (
+            <button type="button" class="chip" data-filter="lang" data-value={l} aria-pressed="false">
+              {l}
+            </button>
+          ))}
+        </div>
+      )
+    }
+    <span class="count phone-count">Showing <span data-count>{items.length}</span> of {items.length}</span>
+  </div>
+
+  <div class="wrap">
+    <section class="picker" aria-label="Pick for me">
+      <div class="ask">
+        <button type="button" class="go" data-roll>
+          <span class="spin" aria-hidden="true">↻</span>
+          <span class="mono">Pick for me</span>
+        </button>
+        <div class="ask-text">
+          <span class="ask-title">Can't choose? Let the shelf decide.</span>
+          <span class="mono hint" data-hint>Picks from the {items.length} matching your filters above</span>
+        </div>
+      </div>
+      <div class="slot" aria-live="polite" data-slot>
+        <div class="placeholder mono">Your pick lands here</div>
+      </div>
+    </section>
+
+    <section class="grid" aria-label="Recommendations" data-grid>
+      {
+        items.map((item, i) => (
+          <div
+            class="card"
+            style={`--r:${ROTS[i % ROTS.length]}`}
+            data-item
+            data-type={item.type}
+            data-genres={item.genres.join('|')}
+            data-lang={item.language ?? ''}
+            title={item.note}
+          >
+            {isBook(item) ? (
+              <article class="book">
+                <div class="top">
+                  <span data-kind>Library card</span>
+                  <span>No. {item.no}</span>
+                </div>
+                <h2 class="title">{item.title}</h2>
+                <div class="by">by {item.by}</div>
+                <div class="foot">
+                  <span class="genre">{item.genre}</span>
+                  <span class={`stamp${item.reading ? ' reading' : ''}`}>{item.reading ? 'READING NOW' : 'RECOMMENDED'}</span>
+                </div>
+              </article>
+            ) : (
+              <article class={`ticket ${item.type === 'Movie' ? 'movie' : 'series'}`}>
+                <div class="main">
+                  <div class="top">
+                    <span data-kind>Admit one</span>
+                    <span>{item.type.toUpperCase()}</span>
+                  </div>
+                  <h2 class="title">{item.title}</h2>
+                  <div class="by">{item.by}</div>
+                  <div class="tags">
+                    {item.language && <span>{item.language}</span>}
+                    <span>{item.genre}</span>
+                  </div>
+                </div>
+                <div class="stub">
+                  <span class="no">No. {item.no}</span>
+                  <span class="code">{item.code}</span>
+                </div>
+                <span class="notch t" aria-hidden="true" />
+                <span class="notch b" aria-hidden="true" />
+              </article>
+            )}
+          </div>
+        ))
+      }
+      <p class="empty" data-empty hidden>No matches yet. Clearly I need to read or watch more of these.</p>
+    </section>
+  </div>
+</Base>
+
+<script>
+  const ROTS = ['-2deg', '1.5deg', '-0.8deg', '2deg', '-1.6deg', '0.8deg'];
+  const state = { type: 'All', genre: 'All', lang: 'All' };
+  let lastPick: HTMLElement | null = null;
+  let spins = 0;
+
+  const cards = [...document.querySelectorAll<HTMLElement>('[data-item]')];
+  const chips = [...document.querySelectorAll<HTMLButtonElement>('[data-filter]')];
+  const langRow = document.querySelector<HTMLElement>('[data-lang-row]');
+  const counts = document.querySelectorAll<HTMLElement>('[data-count]');
+  const empty = document.querySelector<HTMLElement>('[data-empty]');
+  const hint = document.querySelector<HTMLElement>('[data-hint]');
+  const roll = document.querySelector<HTMLButtonElement>('[data-roll]');
+  const slot = document.querySelector<HTMLElement>('[data-slot]');
+
+  const visible = () => cards.filter((c) => !c.hidden);
+
+  function matches(c: HTMLElement) {
+    const { type = '', genres = '', lang = '' } = c.dataset;
+    if (state.type !== 'All' && type !== state.type) return false;
+    if (state.genre !== 'All' && !genres.split('|').includes(state.genre)) return false;
+    if (state.lang !== 'All' && lang !== state.lang) return false;
+    return true;
+  }
+
+  function apply() {
+    // Chips: pressed state, and genre chips follow the Type filter.
+    for (const chip of chips) {
+      const kind = chip.dataset.filter as keyof typeof state;
+      chip.setAttribute('aria-pressed', String(state[kind] === chip.dataset.value));
+      if (kind === 'genre' && chip.dataset.types) {
+        chip.hidden = state.type !== 'All' && !chip.dataset.types.split('|').includes(state.type);
+      }
+    }
+    if (langRow) langRow.hidden = state.type === 'Book';
+
+    let n = 0;
+    for (const c of cards) {
+      c.hidden = !matches(c);
+      if (!c.hidden) c.style.setProperty('--r', ROTS[n++ % ROTS.length]);
+    }
+    counts.forEach((el) => (el.textContent = String(n)));
+    if (empty) empty.hidden = n > 0;
+    if (roll) roll.disabled = n === 0;
+    if (hint) hint.textContent = n ? `Picks from the ${n} matching your filters above` : 'Nothing matches. Loosen a filter?';
+  }
+
+  for (const chip of chips) {
+    chip.addEventListener('click', () => {
+      const kind = chip.dataset.filter as keyof typeof state;
+      state[kind] = chip.dataset.value ?? 'All';
+      if (kind === 'type') {
+        state.genre = 'All';
+        if (state.type === 'Book') state.lang = 'All';
+      }
+      apply();
+    });
+  }
+
+  roll?.addEventListener('click', () => {
+    const pool = visible();
+    if (!pool.length || !slot) return;
+    let pick = pool[Math.floor(Math.random() * pool.length)];
+    if (pool.length > 1 && pick === lastPick) pick = pool.find((c) => c !== lastPick)!;
+    lastPick = pick;
+    spins++;
+
+    const art = pick.querySelector('article')!.cloneNode(true) as HTMLElement;
+    const kind = art.querySelector<HTMLElement>('[data-kind]');
+    if (kind) kind.textContent = `Tonight's pick · ${kind.textContent}`;
+    const title = art.querySelector('h2');
+    if (title) {
+      // Keep one h1/h2 outline: the pick is a copy, so it is not a heading.
+      const div = document.createElement('div');
+      div.className = title.className;
+      div.textContent = title.textContent;
+      title.replaceWith(div);
+    }
+    art.classList.add('picked', spins % 2 ? 'flipA' : 'flipB');
+    slot.replaceChildren(art);
+  });
+
+  apply();
+</script>
+
+<style>
+  .intro {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 24px 0;
+    padding: 24px 0 40px;
+  }
+  h1 {
+    flex: 3 1 560px;
+    padding-right: 32px;
+    font-size: clamp(64px, 8vw, 132px);
+    line-height: 0.86;
+    letter-spacing: -0.055em;
+  }
+  .intro p {
+    flex: 2 1 300px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--muted);
+  }
+
+  /* Filters */
+  .filters {
+    position: relative;
+    z-index: 3;
+    margin: 0 var(--gutter);
+    background: var(--ink);
+    border-top: 1px solid var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .frow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+  .frow[hidden],
+  .chip[hidden] {
+    display: none;
+  }
+  .flabel {
+    width: 80px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--smoke);
+  }
+  .chip.big {
+    min-height: 40px;
+    padding: 0 16px;
+    font-size: 13px;
+  }
+  .count {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--smoke);
+  }
+  .desk-count {
+    margin-left: auto;
+  }
+  .phone-count {
+    display: none;
+  }
+
+  /* Pick for me */
+  .picker {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 40px 56px;
+    padding: 56px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .ask {
+    flex: 1 1 380px;
+    display: flex;
+    align-items: center;
+    gap: 28px;
+  }
+  .go {
+    flex: 0 0 auto;
+    width: 160px;
+    height: 160px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--red);
+    color: var(--white);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: background 0.2s;
+  }
+  .go:hover {
+    background: var(--red-deep);
+  }
+  .go:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .go .spin {
+    display: inline-block;
+    font-size: 52px;
+    line-height: 1;
+    transition: transform 0.4s;
+  }
+  .go:hover .spin {
+    transform: rotate(180deg);
+  }
+  .go .mono {
+    font-size: 12px;
+  }
+  .ask-text {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .ask-title {
+    font-weight: 800;
+    font-size: clamp(32px, 3vw, 48px);
+    line-height: 0.92;
+    letter-spacing: -0.045em;
+  }
+  .hint {
+    font-size: 13px;
+    color: var(--smoke);
+  }
+  .slot {
+    flex: 1 1 420px;
+    min-width: 0;
+    display: flex;
+    justify-content: center;
+  }
+  .placeholder {
+    width: 100%;
+    max-width: 440px;
+    height: 230px;
+    border: 2px dashed #3a3a3a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    color: var(--smoke);
+  }
+  .slot :global(.picked) {
+    width: 100%;
+    max-width: 440px;
+    transform: rotate(-2deg);
+  }
+  .slot :global(.picked .title) {
+    font-size: 36px;
+  }
+  .slot :global(.flipA) {
+    animation: flipA 0.55s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .slot :global(.flipB) {
+    animation: flipB 0.55s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  @keyframes flipA {
+    0% {
+      transform: perspective(900px) rotateY(90deg) rotate(-2deg);
+      opacity: 0;
+    }
+    100% {
+      transform: perspective(900px) rotateY(0) rotate(-2deg);
+      opacity: 1;
+    }
+  }
+  @keyframes flipB {
+    0% {
+      transform: perspective(900px) rotateY(-90deg) rotate(-2deg);
+      opacity: 0;
+    }
+    100% {
+      transform: perspective(900px) rotateY(0) rotate(-2deg);
+      opacity: 1;
+    }
+  }
+
+  /* The grid of cards */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 40px 28px;
+    padding: 56px 8px 120px;
+  }
+  .card {
+    position: relative;
+    transform: rotate(var(--r));
+    transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.35s;
+  }
+  .card[hidden] {
+    display: none;
+  }
+  .card:hover {
+    transform: rotate(0) translateY(-8px) scale(1.03);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+    z-index: 2;
+  }
+  .empty {
+    grid-column: 1 / -1;
+    font-size: 20px;
+    color: var(--muted);
+  }
+  .empty[hidden] {
+    display: none;
+  }
+
+  /* Shared card parts (also used by the cloned pick, hence :global) */
+  :global(.book),
+  :global(.ticket) {
+    height: 230px;
+  }
+  :global(.book .title),
+  :global(.ticket .title) {
+    margin: 0;
+    font-weight: 800;
+    font-size: 30px;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  :global(.book .top),
+  :global(.ticket .top) {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+
+  /* Library card: lined paper with a red top edge */
+  :global(.book) {
+    background-color: var(--white);
+    background-image: repeating-linear-gradient(#ffffff 0, #ffffff 27px, #e4e4e0 27px, #e4e4e0 28px);
+    background-position: 0 58px;
+    color: var(--ink);
+    border-top: 10px solid var(--red);
+    padding: 14px 20px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  :global(.book .top) {
+    color: #5e5e5a;
+  }
+  :global(.book .by) {
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+  :global(.book .foot) {
+    margin-top: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 12px;
+  }
+  :global(.book .genre) {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 4px 8px;
+    background: var(--ink);
+    color: var(--white);
+  }
+  :global(.book .stamp) {
+    transform: rotate(-9deg);
+    border: 2px solid var(--red);
+    color: var(--red);
+    padding: 4px 8px;
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+  }
+  :global(.book .stamp.reading) {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+
+  /* Ticket stub: red for movies, charcoal for series */
+  :global(.ticket) {
+    position: relative;
+    display: flex;
+    color: var(--white);
+  }
+  :global(.ticket.movie) {
+    background: var(--red);
+  }
+  :global(.ticket.series) {
+    background: var(--charcoal);
+  }
+  :global(.ticket .main) {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  :global(.ticket .by) {
+    font-family: var(--mono);
+    font-size: 12px;
+    opacity: 0.85;
+  }
+  :global(.ticket .tags) {
+    margin-top: auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+  :global(.ticket .tags span) {
+    padding: 4px 8px;
+    border: 1px solid var(--white);
+  }
+  :global(.ticket .stub) {
+    flex: 0 0 74px;
+    border-left: 2px dashed #5e5e5a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 0;
+  }
+  :global(.ticket.movie .stub) {
+    border-left-color: rgba(255, 255, 255, 0.6);
+  }
+  :global(.ticket .no) {
+    writing-mode: vertical-rl;
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+  :global(.ticket .code) {
+    font-weight: 800;
+    font-size: 26px;
+    letter-spacing: -0.03em;
+  }
+  :global(.ticket .notch) {
+    position: absolute;
+    right: 63px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--ink);
+  }
+  :global(.ticket .notch.t) {
+    top: -12px;
+  }
+  :global(.ticket .notch.b) {
+    bottom: -12px;
+  }
+
+  /* Phone */
+  @media (max-width: 640px) {
+    .intro {
+      padding: 32px 0 28px;
+    }
+    h1 {
+      flex-basis: 100%;
+      padding-right: 0;
+      font-size: 58px;
+    }
+    .intro p {
+      flex-basis: 100%;
+      font-size: 13px;
+    }
+    .filters {
+      margin: 0;
+      padding: 14px 0;
+      gap: 10px;
+    }
+    .frow {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      padding: 0 16px;
+      scrollbar-width: none;
+    }
+    .frow::-webkit-scrollbar {
+      display: none;
+    }
+    .frow .chip {
+      flex: 0 0 auto;
+      min-height: 36px;
+      font-size: 11px;
+    }
+    .frow .chip.big {
+      min-height: 40px;
+      font-size: 12px;
+    }
+    .flabel {
+      flex: 0 0 auto;
+      width: auto;
+      padding-right: 4px;
+      font-size: 11px;
+    }
+    .desk-count {
+      display: none;
+    }
+    .phone-count {
+      display: block;
+      padding: 0 16px;
+      font-size: 11px;
+    }
+    .picker {
+      display: block;
+      padding: 32px 0;
+    }
+    .ask {
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .go {
+      width: 104px;
+      height: 104px;
+      gap: 2px;
+    }
+    .go .spin {
+      font-size: 34px;
+    }
+    .go .mono {
+      font-size: 11px;
+    }
+    .ask-title {
+      font-size: 28px;
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+    }
+    .hint {
+      font-size: 11px;
+    }
+    .placeholder {
+      height: 200px;
+    }
+    .slot :global(.picked) {
+      max-width: none;
+      transform: rotate(-1.5deg);
+    }
+    .slot :global(.picked .title) {
+      font-size: 30px;
+    }
+    .grid {
+      grid-template-columns: 1fr;
+      gap: 28px;
+      padding: 32px 0 48px;
+    }
+    :global(.book),
+    :global(.ticket) {
+      height: 200px;
+    }
+    :global(.book) {
+      border-top-width: 8px;
+      padding: 12px 16px 16px;
+      background-position: 0 52px;
+      gap: 6px;
+    }
+    :global(.book .title),
+    :global(.ticket .title) {
+      font-size: 28px;
+    }
+    :global(.book .top),
+    :global(.ticket .top) {
+      font-size: 10px;
+    }
+    :global(.book .by) {
+      font-size: 12px;
+    }
+    :global(.book .genre),
+    :global(.book .stamp) {
+      font-size: 11px;
+      padding: 3px 7px;
+    }
+    :global(.ticket .main) {
+      padding: 16px;
+      gap: 6px;
+    }
+    :global(.ticket .by) {
+      font-size: 11px;
+    }
+    :global(.ticket .tags) {
+      font-size: 10px;
+    }
+    :global(.ticket .tags span) {
+      padding: 3px 7px;
+    }
+    :global(.ticket .stub) {
+      flex-basis: 64px;
+      padding: 16px 0;
+    }
+    :global(.ticket .no) {
+      font-size: 10px;
+    }
+    :global(.ticket .code) {
+      font-size: 22px;
+    }
+    :global(.ticket .notch) {
+      right: 54px;
+      width: 20px;
+      height: 20px;
+    }
+    :global(.ticket .notch.t) {
+      top: -10px;
+    }
+    :global(.ticket .notch.b) {
+      bottom: -10px;
+    }
+  }
+</style>

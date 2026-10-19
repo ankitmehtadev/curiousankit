@@ -4,33 +4,43 @@ import Base from '../layouts/Base.astro';
 import { SITE_TITLE } from '../consts';
 
 const feed = new URL('/rss.xml', Astro.site).href;
-const intro = 'New notes, experiments and learning entries, delivered when they are published.';
+const intro = 'New notes, experiments and rabbit holes, delivered when they are published.';
 ---
 
 <Base title={`Subscribe | ${SITE_TITLE}`} description={intro}>
-  <section class="wrap page">
-    <h1>Subscribe</h1>
-    <p class="intro">{intro}</p>
-
-    <section class="block" aria-labelledby="rss-title">
-      <h2 id="rss-title">RSS</h2>
-      <p>
-        RSS is a plain, ad free way to follow a website. Paste this address into a feed reader, such
-        as Feedly, Inoreader or NetNewsWire, and new posts arrive there by themselves. There is no
-        account to make with me and nothing to sign up for.
-      </p>
-      <div class="address">
-        <code id="feed">{feed}</code>
-        <button type="button" id="copy" class="btn">Copy address</button>
+  <div class="wrap">
+    <section class="hero">
+      <div class="label-row"><span>Subscribe</span><span>Two ways to follow along</span></div>
+      <div class="hero-body">
+        <h1>Never miss a <span class="red">curious</span> thing.</h1>
+        <p class="mono intro">{intro}</p>
       </div>
-      <p class="small">
-        Curious what it looks like? <a href="/rss.xml">Open the feed</a>. It is plain text, written for
-        feed readers rather than people.
-      </p>
     </section>
-  </section>
 
-  <Subscribe />
+    <Subscribe label="01 · By email" />
+
+    <section class="rss" aria-labelledby="rss-title">
+      <div class="label-row"><span>02 · By RSS</span><span>No account, no sign up</span></div>
+      <div class="rss-body">
+        <h2 id="rss-title">Prefer a feed reader?</h2>
+        <div class="rss-text">
+          <p>
+            RSS is a plain, ad free way to follow a website. Paste this address into a feed reader, such
+            as Feedly, Inoreader or NetNewsWire, and new posts arrive there by themselves. There is no
+            account to make with me and nothing to sign up for.
+          </p>
+          <div class="address">
+            <code id="feed">{feed}</code>
+            <button type="button" id="copy" class="copy">Copy address</button>
+          </div>
+          <p class="mono small">
+            Curious what it looks like? <a href="/rss.xml">Open the feed</a>. It is plain text, written for
+            feed readers rather than people.
+          </p>
+        </div>
+      </div>
+    </section>
+  </div>
 </Base>
 
 <script>
@@ -63,52 +73,132 @@ const intro = 'New notes, experiments and learning entries, delivered when they 
 </script>
 
 <style>
-  .page {
-    padding-top: 4rem;
+  .hero {
+    border-top: 1px solid var(--white);
+    padding: 20px 0 96px;
+  }
+  .hero-body {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 32px 0;
+    padding-top: 56px;
   }
   h1 {
-    margin-bottom: 0.4em;
-    font-size: clamp(2.4rem, 5vw, 3.5rem);
+    flex: 4 1 640px;
+    padding-right: 32px;
+    font-size: var(--display);
+    line-height: 0.88;
+    letter-spacing: -0.055em;
   }
   .intro {
-    max-width: 34rem;
-    margin: 0 0 3rem;
+    flex: 2 1 280px;
+    font-size: 14px;
+    line-height: 1.6;
     color: var(--muted);
   }
-  .block {
-    max-width: 40rem;
+  .rss {
+    border-top: 1px solid var(--white);
+    padding: 20px 0 120px;
+  }
+  .rss-body {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 32px 48px;
+    padding-top: 64px;
   }
   h2 {
-    margin: 0 0 0.8rem;
-    padding-top: 1.4rem;
-    border-top: 1px solid var(--ink);
-    font-size: 2rem;
+    flex: 3 1 480px;
+    font-size: clamp(40px, 4.4vw, 72px);
+    line-height: 0.9;
+    letter-spacing: -0.05em;
+  }
+  .rss-text {
+    flex: 2 1 380px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--body);
   }
   .address {
     display: flex;
     flex-wrap: wrap;
     align-items: stretch;
-    gap: 0.6rem;
-    margin: 1.4rem 0 1rem;
   }
   code {
-    flex: 1 1 18rem;
+    flex: 1 1 240px;
     min-width: 0;
-    padding: 0.7rem 0.9rem;
-    border: 1px solid var(--rule);
-    background: var(--band);
-    font-family: var(--font-mono);
-    font-size: 0.85rem;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    font-family: var(--mono);
+    font-size: 14px;
     line-height: 1.5;
-    color: var(--ink);
+    color: var(--white);
     overflow-wrap: anywhere;
   }
-  .address .btn {
-    cursor: pointer;
-    font-family: inherit;
+  .copy {
+    flex: 0 0 auto;
+    min-height: 52px;
+    padding: 0 20px;
+    border: 1px solid var(--white);
+    background: var(--white);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 13px;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+  }
+  .copy:hover {
+    background: var(--red);
+    border-color: var(--red);
+    color: var(--white);
   }
   .small {
-    font-size: 0.85rem;
-    color: var(--muted);
+    font-size: 13px;
+    color: var(--smoke);
+  }
+  .small a {
+    color: var(--white);
+    text-decoration-color: var(--red);
+    text-underline-offset: 4px;
+    text-decoration-thickness: 2px;
+  }
+  .small a:hover {
+    color: var(--red);
+  }
+  @media (max-width: 640px) {
+    .hero {
+      padding: 14px 0 56px;
+    }
+    .hero-body {
+      padding-top: 32px;
+      gap: 20px;
+    }
+    h1 {
+      flex-basis: 100%;
+      padding-right: 0;
+      font-size: 54px;
+    }
+    .intro {
+      font-size: 13px;
+    }
+    .rss {
+      padding: 14px 0 72px;
+    }
+    .rss-body {
+      padding-top: 32px;
+    }
+    h2 {
+      flex-basis: 100%;
+      font-size: 40px;
+    }
+    .rss-text {
+      font-size: 16px;
+    }
+    .copy {
+      flex: 1 1 100%;
+    }
   }
 </style>

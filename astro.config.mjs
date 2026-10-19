@@ -11,8 +11,15 @@ export default defineConfig({
   // Code blocks are styled by our own CSS, not a colour theme.
   markdown: { syntaxHighlight: false },
   redirects: {
-    '/blog': '/notes',
-    // Experiment 1 first lived under /notes. This keeps any early link working.
-    '/notes/experiment-1-this-website': '/experiments/experiment-1-this-website',
+    // Old addresses from the first version of the site, so early links keep working.
+    '/blog': '/archive/',
+    '/notes': '/ai-journey/',
+    '/experiments': '/ai-journey/',
+    '/learning': '/ai-journey/',
+    '/start': '/',
+    '/search': '/archive/',
+    '/notes/why-these-notes': '/about/',
+    '/notes/what-you-will-and-wont-find-here': '/about/',
+    '/notes/experiment-1-this-website': '/experiments/experiment-1-this-website/',
   },
 });

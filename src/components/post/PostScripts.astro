@@ -1,0 +1,49 @@
+---
+// Small behaviours shared by every post: Copy buttons on prompt boxes (including the older
+// <figure class="prompt"> markup) and the "Copy link" share button.
+---
+
+<script>
+  function flash(button: HTMLButtonElement, text: string, back: string) {
+    button.textContent = text;
+    window.setTimeout(() => (button.textContent = back), 1800);
+  }
+
+  async function copyText(text: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  // Give older prompt figures a Copy button too.
+  document.querySelectorAll<HTMLElement>('.prose figure.prompt > figcaption').forEach((cap) => {
+    if (cap.querySelector('[data-copy]')) return;
+    const label = document.createElement('span');
+    label.textContent = cap.textContent ?? '';
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'copy-btn';
+    button.dataset.copy = '';
+    button.textContent = 'Copy';
+    cap.replaceChildren(label, button);
+  });
+
+  document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const box = button.closest('.prompt-box, figure.prompt');
+      const text = box?.querySelector('pre')?.textContent ?? '';
+      const ok = await copyText(text.trim());
+      flash(button, ok ? 'Copied ✓' : 'Select and copy', 'Copy');
+    });
+  });
+
+  document.querySelectorAll<HTMLButtonElement>('[data-copy-link]').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const ok = await copyText(location.href);
+      flash(button, ok ? 'Link copied ✓' : 'Copy from the address bar', 'Copy link');
+    });
+  });
+</script>

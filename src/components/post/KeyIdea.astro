@@ -1,0 +1,63 @@
+---
+// A callout for the one thing readers should remember.
+//   <KeyIdea>The one thing to remember.</KeyIdea>                          white box (AI notes)
+//   <KeyIdea label="Huh, interesting" variant="outline">A surprising fact.</KeyIdea>   red outline (rabbit holes)
+interface Props {
+  label?: string;
+  variant?: 'solid' | 'outline';
+}
+const { label = 'Key idea', variant = 'solid' } = Astro.props;
+---
+
+<aside class:list={['key-idea', variant]}>
+  <div class="ki-label">{label}</div>
+  <div class="ki-text"><slot /></div>
+</aside>
+
+<style>
+  .key-idea {
+    margin: 32px 0;
+    padding: 24px 28px;
+  }
+  .solid {
+    background: var(--white);
+    color: var(--ink);
+  }
+  .outline {
+    border: 1px solid var(--red);
+    color: var(--white);
+  }
+  .ki-label {
+    margin-bottom: 10px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--red);
+  }
+  .ki-text {
+    font-weight: 700;
+    font-size: 22px;
+    line-height: 1.4;
+  }
+  .ki-text :global(p) {
+    margin: 0;
+  }
+  .ki-text :global(p + p) {
+    margin-top: 12px;
+  }
+  .solid .ki-text :global(a) {
+    color: var(--ink);
+  }
+  @media (max-width: 640px) {
+    .key-idea {
+      margin: 24px 0;
+      padding: 18px;
+    }
+    .ki-label {
+      font-size: 11px;
+      margin-bottom: 8px;
+    }
+    .ki-text {
+      font-size: 19px;
+    }
+  }
+</style>

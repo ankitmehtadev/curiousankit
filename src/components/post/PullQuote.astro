@@ -1,0 +1,31 @@
+---
+// A big red line worth repeating. Usage in .mdx: <PullQuote>A line worth repeating.</PullQuote>
+---
+
+<blockquote class="pull-quote"><p><slot /></p></blockquote>
+
+<style>
+  .pull-quote {
+    margin: 56px 0;
+    padding: 0;
+    border: 0;
+  }
+  .pull-quote p,
+  .pull-quote :global(p) {
+    margin: 0;
+    font-weight: 800;
+    font-size: 44px;
+    line-height: 0.98;
+    letter-spacing: -0.045em;
+    color: var(--red);
+  }
+  @media (max-width: 640px) {
+    .pull-quote {
+      margin: 36px 0;
+    }
+    .pull-quote p,
+    .pull-quote :global(p) {
+      font-size: 32px;
+    }
+  }
+</style>

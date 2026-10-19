@@ -1,0 +1,66 @@
+---
+// The cartoon of Ankit on a red disc. With `tricks`, the character is wrapped in .char / .head groups
+// (and the clip lets him leave the top of the disc) so the About page can animate him.
+interface Props {
+  id: string; // unique per page, keeps the SVG ids apart
+  tricks?: boolean;
+  sparkles?: 0 | 1 | 2;
+}
+const { id, tricks = false, sparkles = 2 } = Astro.props;
+const clip = `${id}-disc`;
+const dots = `${id}-dots`;
+---
+
+<svg viewBox="0 0 400 400" class="avatar" role="img" aria-label="Cartoon of Ankit with curly hair, round glasses and a beard">
+  <defs>
+    <clipPath id={clip}>
+      <circle cx="200" cy="200" r="196"></circle>
+      {tricks && <rect x="-400" y="-600" width="1200" height="800"></rect>}
+    </clipPath>
+    <pattern id={dots} width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <circle cx="4" cy="4" r="1.6" fill="#0B0B0B"></circle>
+    </pattern>
+  </defs>
+  <circle cx="200" cy="200" r="196" fill="#D93A3A"></circle>
+  <g clip-path={`url(#${clip})`}>
+    <g class="char">
+      <g transform="translate(0 -40)" stroke="#0B0B0B" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M40 470 C46 410 104 380 168 372 L200 404 L232 372 C296 380 354 410 360 470 Z" fill="#8C8C8C"></path>
+        <path d="M40 470 C46 410 104 380 168 372 L200 404 L232 372 C296 380 354 410 360 470 Z" fill={`url(#${dots})`} opacity="0.35" stroke="none"></path>
+        <path d="M176 336 L176 378 L200 404 L224 378 L224 336 Z" fill="#FFFFFF"></path>
+        <path d="M168 372 L152 400 L194 410 L200 404 Z" fill="#BDBDBD"></path>
+        <path d="M232 372 L248 400 L206 410 L200 404 Z" fill="#BDBDBD"></path>
+        <path d="M200 410 L200 470"></path>
+        <circle cx="200" cy="428" r="3.5" fill="#0B0B0B"></circle><circle cx="200" cy="448" r="3.5" fill="#0B0B0B"></circle>
+        <g class="head">
+          <circle cx="118" cy="225" r="18" fill="#FFFFFF"></circle><circle cx="282" cy="225" r="18" fill="#FFFFFF"></circle>
+          <path d="M120 210 C120 140 150 110 200 110 C250 110 280 140 280 210 C280 300 248 350 200 352 C152 350 120 300 120 210 Z" fill="#FFFFFF"></path>
+          <path d="M112 205 C96 170 104 120 132 104 C130 74 166 58 188 72 C204 50 244 54 254 80 C284 80 304 110 296 140 C304 160 300 185 288 205 C284 170 270 150 250 142 C240 152 222 150 212 140 C200 152 180 154 168 142 C150 150 128 170 112 205 Z" fill="#0B0B0B"></path>
+          <path d="M146 100 q8 -9 17 0 M194 78 q8 -9 17 0 M238 92 q8 -9 17 0 M270 120 q8 -6 14 2" stroke="#4A4A4A" stroke-width="4" fill="none"></path>
+          <path class="brows" d="M146 182 Q164 172 182 180 M218 180 Q236 172 254 182" fill="none"></path>
+          <path d="M138 210 L122 206 M262 210 L278 206 M190 212 Q200 206 210 212" fill="none"></path>
+          <circle cx="164" cy="214" r="26" fill="#FFFFFF" stroke-width="7"></circle>
+          <circle cx="236" cy="214" r="26" fill="#FFFFFF" stroke-width="7"></circle>
+          <circle cx="166" cy="216" r="5" fill="#0B0B0B" stroke="none"></circle>
+          <circle class="eye-r" cx="238" cy="216" r="5" fill="#0B0B0B" stroke="none"></circle>
+          <path d="M150 200 q6 -6 12 -6 M222 200 q6 -6 12 -6" stroke="#BDBDBD" stroke-width="3" fill="none"></path>
+          <path d="M200 222 Q192 246 204 250" fill="none" stroke-width="5"></path>
+          <path d="M122 240 C124 300 156 350 200 354 C244 350 276 300 278 240 C270 268 254 272 238 268 C222 262 212 276 200 276 C188 276 178 262 162 268 C146 272 130 268 122 240 Z" fill="#0B0B0B"></path>
+          <path d="M178 296 Q200 312 222 296" stroke="#FFFFFF" stroke-width="5" fill="none"></path>
+          <path d="M150 300 l6 12 M176 322 l3 12 M226 320 l-2 12 M252 296 l-6 12" stroke="#FFFFFF" stroke-width="2.5" opacity="0.55"></path>
+        </g>
+      </g>
+    </g>
+  </g>
+  {sparkles >= 1 && <path d="M330 90 l5 12 l12 5 l-12 5 l-5 12 l-5 -12 l-12 -5 l12 -5 z" fill="#FFFFFF"></path>}
+  {sparkles >= 2 && <path d="M70 300 l4 9 l9 4 l-9 4 l-4 9 l-4 -9 l-9 -4 l9 -4 z" fill="#FFFFFF"></path>}
+</svg>
+
+<style>
+  .avatar {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+</style>

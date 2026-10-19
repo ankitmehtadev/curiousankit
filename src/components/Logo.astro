@@ -1,0 +1,42 @@
+---
+// The Lens wordmark: the "o" in Curious is a red magnifying glass. Sized in em, so set font-size.
+interface Props {
+  size?: number;
+}
+const { size = 32 } = Astro.props;
+---
+
+<span class="logo" style={`font-size:${size}px`}>Curi<span class="lens" aria-hidden="true"><span class="handle"></span></span><span class="sr-only">o</span>us<br />Ankit</span>
+
+<style>
+  .logo {
+    display: block;
+    font-family: var(--font);
+    font-weight: 800;
+    line-height: 0.86;
+    letter-spacing: -0.05em;
+    color: var(--white);
+  }
+  .lens {
+    display: inline-block;
+    position: relative;
+    width: 0.5em;
+    height: 0.5em;
+    border: 0.11em solid var(--red);
+    border-radius: 50%;
+    margin: 0 0.03em 0 0.01em;
+    transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .handle {
+    position: absolute;
+    width: 0.1em;
+    height: 0.24em;
+    background: var(--red);
+    right: -0.12em;
+    bottom: -0.2em;
+    transform: rotate(-45deg);
+  }
+  :global(a:hover) > .logo .lens {
+    transform: rotate(-20deg) scale(1.08);
+  }
+</style>
