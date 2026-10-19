@@ -44,7 +44,7 @@ export const CURRENTLY_CURIOUS = [
 
 // Email sign up through Kit. Paste the form address, for example 'https://app.kit.com/forms/1234567/subscriptions'.
 // While this is empty, the subscribe box opens an email to you instead, so nobody is lost.
-export const SUBSCRIBE_ACTION = '';
+export const SUBSCRIBE_ACTION = 'https://app.kit.com/forms/10064935/subscriptions';
 // The name of the email field your newsletter service expects.
 export const SUBSCRIBE_FIELD = 'email_address'; // Kit's field name
 
