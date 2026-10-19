@@ -4,17 +4,19 @@
 //   <Level n={2} title="What the research says" />
 //   <Level n={3} title="The real reason" />
 // Change the small label with label="..." if you like.
+// A post with four levels: give level 3 label="Deeper still" short="Level 3", and level 4 becomes Rock bottom.
 interface Props {
-  n: 1 | 2 | 3;
+  n: 1 | 2 | 3 | 4;
   title: string;
   label?: string;
+  short?: string; // the depth meter's label
 }
-const NAMES: Record<number, string> = { 1: 'One step down', 2: 'Deeper', 3: 'Rock bottom' };
-const SHORT: Record<number, string> = { 1: 'Level 1', 2: 'Level 2', 3: 'Bottom' };
-const { n, title, label = NAMES[n] } = Astro.props;
+const NAMES: Record<number, string> = { 1: 'One step down', 2: 'Deeper', 3: 'Rock bottom', 4: 'Rock bottom' };
+const SHORT: Record<number, string> = { 1: 'Level 1', 2: 'Level 2', 3: 'Bottom', 4: 'Bottom' };
+const { n, title, label = NAMES[n], short = SHORT[n] } = Astro.props;
 ---
 
-<h2 id={`l${n}`} class="level-h" data-meter={SHORT[n]} data-meter-title={title}>
+<h2 id={`l${n}`} class="level-h" data-meter={short} data-meter-title={title}>
   <span class="level-label">Level {n} · {label}</span>{title}
 </h2>
 
