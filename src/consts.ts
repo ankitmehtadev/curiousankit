@@ -36,10 +36,10 @@ export const LINKS = {
 
 // The red ticker on the home page. Replace the bracketed lines with what you are into right now.
 export const CURRENTLY_CURIOUS = [
-  '[Topic you are digging into]',
-  '[Book on the desk]',
-  '[AI tool being tested]',
-  "[A question that won't leave you alone]",
+  'Digging into: building an AI central bank in organisations',
+  "On my desk: Poor Charlie's Almanack by Charles T. Munger",
+  'Building with: Claude Code and Claude Design',
+  'Wondering: why is there so much hate all of a sudden in this world?',
 ];
 
 // Email sign up through Kit. Paste the form address, for example 'https://app.kit.com/forms/1234567/subscriptions'.
