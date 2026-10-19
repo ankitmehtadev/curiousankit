@@ -58,3 +58,6 @@ export const RABBIT_TOPIC_BLURBS: Record<string, string> = {
   Productivity: 'Focus, systems and getting things done.',
   Wildcard: 'Anything else that caught my eye.',
 };
+
+// The "Up next" card on the AI Journey lab shelf. Change it when you start planning the next one.
+export const NEXT_EXPERIMENT = 'Building a goal and task tracker application';

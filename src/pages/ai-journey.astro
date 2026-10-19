@@ -2,7 +2,7 @@
 import { getCollection } from 'astro:content';
 import Subscribe from '../components/Subscribe.astro';
 import Base from '../layouts/Base.astro';
-import { SITE_TITLE } from '../consts';
+import { NEXT_EXPERIMENT, SITE_TITLE } from '../consts';
 import { expLabel, formatDate, isAINote, isExperiment, noteUrl, sortNotes } from '../utils';
 
 const all = sortNotes((await getCollection('blog')).filter((n) => n.data.stream === 'AI Journey'));
@@ -77,7 +77,7 @@ const intro =
         <div class="exp next">
           <span class="mono">Exp. · Up next</span>
           <span class="exp-n">{nextN}</span>
-          <span class="exp-t">[Your next experiment idea]</span>
+          <span class="exp-t">{NEXT_EXPERIMENT}</span>
           <a href="/contact/" class="mono suggest">Suggest an experiment →</a>
         </div>
       </div>
