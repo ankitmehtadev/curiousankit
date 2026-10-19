@@ -49,6 +49,8 @@ export function formatDate(date: Date, withYear = true): string {
   }).replace('Sept', 'Sep');
 }
 
+// 2026-10-19, using the same calendar day the post shows (not shifted to UTC).
 export function isoDate(date: Date): string {
-  return date.toISOString().slice(0, 10);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
