@@ -192,6 +192,7 @@ const topicAttr = (t: string, key: 'stream' | 'fmt') =>
                   <span class="mono rday">{it.day}</span>
                   <span class="rt">{it.p.data.title}</span>
                   <span class="mono rmeta">
+                    <span class="mday">{it.day}</span>
                     <span class:list={['mark', it.p.data.stream === 'AI Journey' ? 'red-bg' : 'white-bg', it.x && 'round']} />
                     {it.p.data.stream} · {it.p.data.topic}
                     {it.x && (
@@ -220,7 +221,7 @@ const topicAttr = (t: string, key: 'stream' | 'fmt') =>
   const state = { q: '', stream: 'All', fmt: 'All', topic: 'All', month: '', sel: '' };
   const MF = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-  const $ = <T extends Element = HTMLElement>(s: string) => Array.from(document.querySelectorAll<T>(s) as NodeListOf<any>) as T[];
+  const $ = <T extends Element = HTMLElement>(s: string): T[] => Array.from(document.querySelectorAll<T>(s));
   const search = document.getElementById('search') as HTMLInputElement;
   const status = document.querySelector<HTMLElement>('.status')!;
   const showing = status.querySelector<HTMLElement>('.showing')!;
@@ -651,6 +652,9 @@ const topicAttr = (t: string, key: 'stream' | 'fmt') =>
     font-size: 12px;
     color: var(--muted);
   }
+  .mday {
+    display: none;
+  }
   .mark {
     width: 10px;
     height: 10px;
@@ -828,8 +832,9 @@ const topicAttr = (t: string, key: 'stream' | 'fmt') =>
       font-size: 11px;
       gap: 8px;
     }
-    .rmeta::before {
-      content: attr(data-day);
+    .mday {
+      display: inline;
+      color: var(--smoke);
     }
     .mark {
       width: 9px;
