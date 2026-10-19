@@ -1,7 +1,8 @@
 ---
 title: 'This website'
-description: 'What happened when I ran a website like a business analysis project, with AI as the delivery team.'
+description: 'What happened when I ran a website like a business analysis project, with AI as the delivery team. Then tore it down two weeks later and did it all again.'
 pubDate: 'Oct 04 2026'
+updatedDate: 'Oct 19 2026'
 stream: 'AI Journey'
 format: 'Experiment'
 topic: 'Builds'
@@ -9,15 +10,28 @@ exp: 1
 status: 'Done'
 question: 'Can I run a website the way I run a business analysis project, with AI as the delivery team?'
 outcome: 'Worked'
-tools: ['Claude', 'Astro', 'Cloudflare', 'GitHub']
+tools: ['Claude', 'Claude Design', 'Claude Code', 'Astro', 'Cloudflare', 'GitHub', 'Kit']
+duration: 'Two versions, 4 to 19 Oct 2026'
+log:
+  - day: '4 Oct'
+    title: 'Version one live'
+    text: 'A monochrome serif notebook about learning AI, built from an ordinary chat window.'
+  - day: '17 Oct'
+    title: 'Started again'
+    text: 'New concept: not just AI. The brand and every page redesigned on a Claude Design canvas.'
+  - day: '19 Oct'
+    title: 'Version two live'
+    text: 'Built with Claude Code, pushed live, then filled with my own content page by page.'
 tags: ['Business analysis', 'Building with AI', 'This site']
 ---
 
 The question behind this experiment was simple. Could I run a website the way I run a project at work, with a brief, options to react to, a specification, a build, testing and a release, and let AI do the delivery? You are reading the answer.
 
-<aside class="note"><em>Margin note.</em> I had planned to build this with Claude Code. In the end I used an ordinary chat window and ran every command myself.</aside>
+<aside class="note"><em>Margin note.</em> I had planned to build this with Claude Code. In the end I used an ordinary chat window and ran every command myself. For version two, I finally did use Claude Code.</aside>
 
 By delivery I mean that Claude wrote the code and the commands. I decided what I wanted, ran each command in Terminal, and sent back screenshots when something broke. This note is the retrospective.
+
+It now covers two versions of the site. The first half is version one, built in early October 2026. The second half, from "Two weeks later, I started again", is the redesign you are looking at now.
 
 ## The brief
 
@@ -80,6 +94,8 @@ The final choices were a stacked wordmark with a thin vertical rule, a palette o
 <figcaption>The chosen brand: the logo, the Ca icon and three colours.</figcaption>
 </figure>
 
+That brand lasted two weeks. More on that below.
+
 > I did not describe the site I wanted. I reacted until one felt right.
 
 ## Why I chose Astro
@@ -101,7 +117,7 @@ The deciding question was what mattered most. For me it was the reader's experie
 
 It also helped that I liked the idea of building a site about learning AI with the help of AI.
 
-What I gave up was real. I write in plain text files, not in a polished editor. Things that Ghost includes, such as search, dark mode, a newsletter form and share images, I had to add one by one, and two of them are still missing: the email signup and the share image. And the updates are mine to look after.
+What I gave up was real. I write in plain text files, not in a polished editor. Things that Ghost includes, such as search, dark mode, a newsletter form and share images, I had to add one by one, and two of them were still missing at launch: the email signup and the share image. Both arrived with version two. And the updates are mine to look after.
 
 What I got was control. Because no theme stood between me and the page, I could ask for the artboard to be followed closely, and it was.
 
@@ -152,13 +168,80 @@ Most of what the AI produced was plausible. My job was to notice what was not ri
 * **The author box.** Every post ended with a "Written by Ankit" box, because blogs usually have one. I asked whether it was needed on a site where I am the only author. It was not, and it went.
 * **The sentence that meant nothing.** The home page said my notes were about "what it all means for how we work". I could not tell what that meant. It had come from the mockup, and you can see it in the screenshot above, where it sounds good while saying little. I replaced it with a plainer line: "and what I learn along the way."
 * **The duplicate link.** My other site was linked from both the About page and the footer. I spotted the repeat and one of them went.
-* **The menu names.** "Courses" implied I was selling courses, so it became "Learning". "Blog" became "Notes".
+* **The menu names.** "Courses" implied I was selling courses, so it became "Learning". "Blog" became "Notes". (Version two replaced both with the two streams: AI Journey and Rabbit Holes.)
 
 None of these were bugs. Each was something a reviewer catches, and each time the reviewer was me.
 
+## Two weeks later, I started again
+
+Version one did its job. But two weeks in, my plans changed. I didn't want Curious Ankit to be only about AI anymore. I research all sorts of things, from psychology and history to money and productivity, and I wanted one place for all of it. A new concept needed a new look, so I decided to redo the complete site.
+
+<aside class="note"><em>Margin note.</em> The two notes that introduced version one, "Why I am keeping these notes" and "What you won't (and will) find here", were retired. They were written for a site that was only about AI.</aside>
+
+### Same method, new canvas
+
+The brief started the same way as before: with things I liked rather than a description. One was a screenshot of a site whose colours and typography I loved, and another was a site whose About page I liked. The rule was to take the theme and the principles, never to copy them like for like.
+
+The method stayed the same too: react to options. This time it all happened on a Claude Design canvas, where every page sat side by side. For each page I asked for three directions and a recommendation, chose one, and the rest were deleted.
+
+Brand came first. The palette became Ink Black, White and a new Curious Red. The type became Archivo for headings and IBM Plex Mono for labels, both free. Then came eight logo options, and I picked number seven, the Lens: the "o" in Curious is a red magnifying glass.
+
+<figure class="shot wide">
+
+![The new home page: a red ticker of what I am currently curious about, the headline Notes from an endlessly curious mind, and two doors into the AI Journey and Rabbit Holes streams](../../assets/experiment1/v2_home.png)
+
+<figcaption>Version two: the home page, with two doors into the two streams.</figcaption>
+</figure>
+
+### Not every round landed
+
+* **The first About page.** I didn't like my first redesign at all. It was too busy and lost the feel of the reference, so it was undone and rebuilt.
+* **The photo.** I wanted my photo blended into the design. It didn't look good, so I dropped it for a cartoon avatar. Then I wanted the avatar to do something: hover over it and it performs one of ten random tricks. And the tricks had to be done by the character, not the whole circle.
+* **The home page.** At one point every section had the same boxed design, and it looked flat. Alternating black sections brought it back. Then I noticed nothing told a visitor that the two streams were doors, so they got a hover effect that invites you in.
+* **The footer.** No giant logo at the bottom.
+
+<figure class="shot wide">
+
+![The About page: a single screen poster with the cartoon avatar in a red circle, I'm Ankit on the left and What I do on the right](../../assets/experiment1/v2_about.png)
+
+<figcaption>The About page is a single screen poster. Hover over the avatar for a trick.</figcaption>
+</figure>
+
+### The new structure
+
+The site now has two streams. **AI Journey** holds notes and numbered experiments (this post is Exp. 001). **Rabbit Holes** holds everything else I research, filed under Mind, History, Money, Productivity and Wildcard, each with a depth rating. Around them sit the **Shelf** (books, movies and series I recommend), the **Archive**, a one screen **About** page and a **Contact** page that works like a chat. Every kind of post has its own template: a classic note, a lab notebook for experiments, and a rabbit hole you scroll down level by level.
+
+<figure class="shot wide">
+
+![Three phone screens: the home page, the red AI Journey page and the white Rabbit Holes page](../../assets/experiment1/v2_phone.png)
+
+<figcaption>The same site on a phone: Home, AI Journey and Rabbit Holes.</figcaption>
+</figure>
+
+### Build day, take two
+
+The margin note at the top says I had planned to use Claude Code for version one. For version two, I did. Instead of me running commands in Terminal, Claude Code worked on its own copy of the repository in the cloud. It split the build across four workers running at the same time (the home, About and Contact pages, the stream pages and the Archive, the Shelf, and the post templates), then put the pieces together, built the site and took screenshots of every page on desktop and on a phone to check them against the designs.
+
+Things still went wrong, just differently:
+
+* **GitHub said no.** Claude couldn't push to my repository until I gave the Claude GitHub App access.
+* **The dates were a day early.** The Archive showed every post one day before its real date. The site thinks in Melbourne time and the build machine thought in UTC.
+* **Stand ins went live.** I made the site live before every placeholder was filled, including a Shelf of books and movies that were picked for the design, not by me. We fixed that the same afternoon, page by page: LinkedIn, the newsletter (through Kit), the ticker, About, Contact, my real Shelf and my first Rabbit Holes.
+
+The two gaps I named in version one, the email signup and the share image, are both closed now.
+
+<figure class="shot wide">
+
+![The Shelf page: library cards for books and ticket stubs for movies and series, with filters for type, genre and language](../../assets/experiment1/v2_shelf.png)
+
+<figcaption>The Shelf, filled with my own list.</figcaption>
+</figure>
+
+> Version one took a Sunday afternoon. Version two took two days of design and an afternoon of building. The method was the same both times.
+
 ## What I would take from it
 
-For other business analysts, six things:
+For other business analysts, seven things:
 
 1. **Treat the first answer as a draft.** Disagreeing was cheap, and it worked.
 2. **Show, do not describe.** Reacting to options got me further than any brief I could have written up front.
@@ -166,6 +249,7 @@ For other business analysts, six things:
 4. **Make the specification a picture, then point at it.** One instruction rebuilt the whole site.
 5. **Trust the system, not the assurance.** The dashboard told the truth when the confident reply did not.
 6. **Read generated copy the way a stakeholder would.** If you cannot say what a sentence means, neither can your reader.
+7. **Ask for options and a recommendation.** Three directions and a clear pick made every design decision in version two quick.
 
 That is the experiment. The site is the evidence.
 
