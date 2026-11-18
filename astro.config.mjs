@@ -40,6 +40,10 @@ export default defineConfig({
     '/search': '/deep-dives/',
     '/notes/why-these-notes': '/about/',
     '/notes/what-you-will-and-wont-find-here': '/about/',
+    // The 'This website' experiment post was removed.
+    '/deep-dives/experiment-1-this-website': '/deep-dives/',
+    '/experiments/experiment-1-this-website': '/deep-dives/',
+    '/notes/experiment-1-this-website': '/deep-dives/',
     ...oldPostRedirects,
   },
 });

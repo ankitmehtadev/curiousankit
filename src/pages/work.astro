@@ -1,0 +1,413 @@
+---
+// Work: a web version of my résumé. Linked from About, not from the main menu.
+import Base from '../layouts/Base.astro';
+import { LINKS, SITE_TITLE } from '../consts';
+import {
+  CERTIFICATIONS,
+  EARLIER,
+  EDUCATION,
+  EXPERIENCE,
+  OUTCOMES,
+  STRENGTHS,
+  TEACHING,
+  TOOLKIT,
+  WORK_INTRO,
+} from '../data/work';
+---
+
+<Base title={`Work | ${SITE_TITLE}`} description={WORK_INTRO.lede}>
+  <section class="wrap narrow hero">
+    <h1>{WORK_INTRO.heading}</h1>
+    <p class="lede">{WORK_INTRO.lede}</p>
+    <div class="actions">
+      <a class="btn" href={LINKS.linkedin}>View on LinkedIn</a>
+      <a class="btn-outline" href={`mailto:${LINKS.email}`}>Get in touch</a>
+    </div>
+  </section>
+
+  <section class="outcomes" aria-labelledby="outcomes">
+    <div class="wrap">
+      <h2 id="outcomes" class="kicker">Selected outcomes</h2>
+      <ul class="stat-grid">
+        {
+          OUTCOMES.map((o) => (
+            <li class="stat">
+              <span class="figure">{o.figure}</span>
+              <span class="stat-text">{o.text}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="wrap block" aria-labelledby="strengths">
+    <h2 id="strengths" class="section-title">What I do</h2>
+    <div class="tiles">
+      {
+        STRENGTHS.map((s) => (
+          <div class="tile">
+            <h3>{s.title}</h3>
+            <p>{s.text}</p>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="wrap narrow block" aria-labelledby="experience">
+    <h2 id="experience" class="section-title">Experience</h2>
+    <ol class="roles">
+      {
+        EXPERIENCE.map((r) => (
+          <li class="role">
+            <div class="role-head">
+              <div>
+                <h3>{r.title}</h3>
+                <p class="org">{r.org}</p>
+              </div>
+              <p class="meta">{r.dates}</p>
+            </div>
+            {r.context && <p class="context">{r.context}</p>}
+            <ul class="points">
+              {r.points.map((p) => (
+                <li>{p}</li>
+              ))}
+            </ul>
+          </li>
+        ))
+      }
+    </ol>
+
+    <h3 class="sub-title">Earlier</h3>
+    <div class="rows">
+      {
+        EARLIER.map((r) => (
+          <div class="row earlier">
+            <div class="earlier-main">
+              <span class="earlier-title">
+                {r.title} · {r.org}
+              </span>
+              <span class="earlier-text">{r.points[0]}</span>
+            </div>
+            <span class="meta">{r.dates}</span>
+          </div>
+        ))
+      }
+    </div>
+
+    <h3 class="sub-title">Teaching</h3>
+    <div class="panel teaching">
+      <div class="role-head">
+        <div>
+          <p class="teach-title">{TEACHING.title}</p>
+          <p class="org">{TEACHING.org}</p>
+        </div>
+        <p class="meta">{TEACHING.dates}</p>
+      </div>
+      <p class="context">{TEACHING.text}</p>
+    </div>
+  </section>
+
+  <section class="wrap narrow block" aria-labelledby="learning">
+    <h2 id="learning" class="section-title">Education and certifications</h2>
+    <div class="two-col">
+      <div>
+        <h3 class="sub-title small">Education</h3>
+        <ul class="plain">
+          {
+            EDUCATION.map((e) => (
+              <li>
+                <span class="item-name">{e.name}</span>
+                <span class="item-meta">
+                  {e.org} · {e.year}
+                </span>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+      <div>
+        <h3 class="sub-title small">Certifications</h3>
+        <ul class="plain">
+          {
+            CERTIFICATIONS.map((c) => (
+              <li>
+                <span class="item-name">{c.name}</span>
+                <span class="item-meta">{c.year}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+    <h3 class="sub-title small">Toolkit</h3>
+    <ul class="toolkit">
+      {TOOLKIT.map((t) => <li>{t}</li>)}
+    </ul>
+  </section>
+
+  <section class="cta">
+    <div class="wrap narrow cta-inner">
+      <h2>Let's talk.</h2>
+      <p>Happy to chat about roles, projects or anything on this site.</p>
+      <div class="actions">
+        <a class="btn light" href={`mailto:${LINKS.email}`}>{LINKS.email}</a>
+        <a class="btn-outline dark" href={LINKS.linkedin}>LinkedIn</a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
+  .outcomes {
+    background: var(--grey-bg);
+  }
+  .outcomes .wrap {
+    padding-top: clamp(64px, 8vw, 96px);
+    padding-bottom: clamp(64px, 8vw, 96px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+  }
+  .outcomes h2 {
+    font-family: var(--mono);
+    font-weight: 500;
+  }
+  .stat-grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  .stat {
+    padding: 28px;
+    border-radius: 20px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .figure {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: clamp(28px, 3.4vw, 36px);
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+  }
+  .stat-text {
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+  .block {
+    padding-top: clamp(72px, 9vw, 104px);
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  .section-title {
+    text-align: center;
+    font-size: clamp(32px, 4.5vw, 44px);
+    letter-spacing: -0.035em;
+  }
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  .tile {
+    padding: 28px;
+    border-radius: 20px;
+    background: var(--grey-bg);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .tile h3 {
+    font-size: 21px;
+    letter-spacing: -0.015em;
+  }
+  .tile p {
+    font-size: 16px;
+    line-height: 1.55;
+    color: var(--body);
+  }
+  .roles {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--line);
+  }
+  .role {
+    padding: 32px 0;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .role-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 6px 24px;
+  }
+  .role h3 {
+    font-size: clamp(22px, 2.6vw, 26px);
+    letter-spacing: -0.02em;
+  }
+  .org {
+    margin-top: 4px;
+    font-size: 16px;
+    color: var(--muted);
+  }
+  .context {
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--ink);
+  }
+  .points {
+    margin: 0;
+    padding-left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--body);
+  }
+  .points li::marker {
+    color: var(--muted);
+  }
+  .sub-title {
+    margin-top: 24px;
+    font-size: 22px;
+    letter-spacing: -0.015em;
+  }
+  .sub-title.small {
+    margin-top: 8px;
+    margin-bottom: 12px;
+    font-size: 18px;
+  }
+  .earlier {
+    padding: 20px 0;
+  }
+  .earlier-main {
+    flex: 999 1 340px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .earlier-title {
+    font-weight: 600;
+    font-size: 17px;
+  }
+  .earlier-text {
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+  .teaching {
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .teach-title {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 21px;
+    letter-spacing: -0.015em;
+  }
+  .two-col {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px 48px;
+  }
+  .plain {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .plain li {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .item-name {
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.4;
+  }
+  .item-meta {
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .toolkit {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .toolkit li {
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: var(--grey-bg);
+    font-size: 14px;
+  }
+  .cta {
+    margin-top: clamp(72px, 9vw, 112px);
+    background: var(--ink);
+    color: #fff;
+  }
+  .cta-inner {
+    padding-top: clamp(72px, 9vw, 112px);
+    padding-bottom: clamp(72px, 9vw, 112px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 18px;
+  }
+  .cta h2 {
+    font-size: clamp(36px, 5vw, 48px);
+    letter-spacing: -0.035em;
+  }
+  .cta p {
+    font-size: 18px;
+    color: #d4d4d8;
+  }
+  .btn.light {
+    background: #fff;
+    color: var(--ink);
+  }
+  .btn.light:hover {
+    background: #e4e4e7;
+  }
+  .btn-outline.dark {
+    color: #fff;
+    border-color: #52525b;
+  }
+  .btn-outline.dark:hover {
+    border-color: #fff;
+  }
+  .cta :focus-visible {
+    outline-color: #fff;
+  }
+</style>
