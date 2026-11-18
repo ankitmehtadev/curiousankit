@@ -1,0 +1,396 @@
+---
+// Deep Dive: a longer piece on one question. Experiments use this too, with a few extras.
+import Base from './Base.astro';
+import Subscribe from '../components/Subscribe.astro';
+import PostScripts from '../components/post/PostScripts.astro';
+import { DIVES, SITE_TITLE } from '../consts';
+import { formatDate, isoDate, kickerOf, postUrl, readingTime, type Post } from '../utils';
+import '../styles/prose.css';
+
+interface Props {
+  post: Post;
+  more?: Post[];
+}
+
+const { post, more = [] } = Astro.props;
+const d = post.data;
+const minutes = readingTime(post.body);
+const isExperiment = d.format === 'Experiment';
+const hasExpFacts = isExperiment && (d.tools.length > 0 || d.duration || d.outcome);
+---
+
+<Base title={`${d.title} | ${SITE_TITLE}`} description={d.description} image={`/og/deep-dives/${post.id}.png`}>
+  <article>
+    <header class="wrap hero head">
+      <a class="kicker" href={DIVES.href}>{kickerOf(post)}</a>
+      <h1 class="title">{d.title}</h1>
+      <p class="lede">{d.description}</p>
+      <p class="meta">
+        <time datetime={isoDate(d.pubDate)}>{formatDate(d.pubDate)}</time> · {minutes} min read
+      </p>
+    </header>
+
+    {
+      (d.surface.length > 0 || d.question) && (
+        <div class="wrap narrow block-bottom">
+          <aside class="panel short" aria-label={d.surface.length ? 'The short answer' : 'The question'}>
+            <p class="kicker">{d.surface.length ? 'The short answer' : 'The question'}</p>
+            {d.surface.length > 1 ? (
+              <ul>
+                {d.surface.map((s) => (
+                  <li>{s}</li>
+                ))}
+              </ul>
+            ) : (
+              <p class="short-text">{d.surface[0] ?? d.question}</p>
+            )}
+          </aside>
+        </div>
+      )
+    }
+
+    {
+      hasExpFacts && (
+        <div class="wrap read facts">
+          {d.duration && (
+            <div>
+              <p class="meta">Duration</p>
+              <p>{d.duration}</p>
+            </div>
+          )}
+          {d.outcome && (
+            <div>
+              <p class="meta">Outcome</p>
+              <p>{d.outcome}</p>
+            </div>
+          )}
+          {d.tools.length > 0 && (
+            <div class="tools">
+              <p class="meta">Tools</p>
+              <p>{d.tools.join(' · ')}</p>
+            </div>
+          )}
+        </div>
+      )
+    }
+
+    <nav class="wrap read toc" aria-label="In this piece" data-toc hidden>
+      <p class="meta">In this piece</p>
+      <ol data-toc-list></ol>
+    </nav>
+
+    <div class="wrap read">
+      <div class="prose" data-prose>
+        <slot />
+      </div>
+    </div>
+
+    {
+      isExperiment && d.log.length > 0 && (
+        <section class="wrap read log" aria-labelledby="log-title">
+          <h2 id="log-title">Build log</h2>
+          <ol>
+            {d.log.map((l) => (
+              <li>
+                <span class="meta">{l.day}</span>
+                <div>
+                  {l.title && <p class="log-title">{l.title}</p>}
+                  <p class="log-text">{l.text}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )
+    }
+
+    {
+      isExperiment && d.scorecard.length > 0 && (
+        <section class="wrap read log" aria-labelledby="score-title">
+          <h2 id="score-title">Scorecard</h2>
+          <ul class="scores">
+            {d.scorecard.map((s) => (
+              <li>
+                <span class="score-label">{s.label}</span>
+                <span class="meta">{s.score} / 5</span>
+                {s.note && <span class="score-note">{s.note}</span>}
+              </li>
+            ))}
+          </ul>
+          {d.verdict && <p class="verdict">{d.verdict}</p>}
+        </section>
+      )
+    }
+
+    {
+      d.takeaways.length > 0 && (
+        <div class="wrap narrow block-top">
+          <aside class="panel friend" aria-label="What I'd tell a friend">
+            <p class="kicker">What I'd tell a friend</p>
+            {d.takeaways.length > 1 ? (
+              <ol>
+                {d.takeaways.map((t) => (
+                  <li>{t}</li>
+                ))}
+              </ol>
+            ) : (
+              <p class="friend-text">{d.takeaways[0]}</p>
+            )}
+          </aside>
+        </div>
+      )
+    }
+
+    {
+      (d.sources.length > 0 || d.aiNote) && (
+        <div class="wrap read extras">
+          {d.sources.length > 0 && (
+            <div class="sources">
+              <p class="meta">Sources</p>
+              <ol>
+                {d.sources.map((s) => (
+                  <li>{s.url ? <a href={s.url}>{s.label}</a> : s.label}</li>
+                ))}
+              </ol>
+            </div>
+          )}
+          {d.aiNote && <p class="ai-note">How I used AI: {d.aiNote} The words and opinions are mine.</p>}
+        </div>
+      )
+    }
+  </article>
+
+  {
+    more.length > 0 && (
+      <nav class="wrap read keep" aria-label="Keep reading">
+        <p class="meta">Keep reading</p>
+        <div class="rows">
+          {more.map((m) => (
+            <a class="row" href={postUrl(m)}>
+              <span class="row-title">{m.data.title}</span>
+              <span class="meta">{kickerOf(m)}</span>
+            </a>
+          ))}
+        </div>
+      </nav>
+    )
+  }
+
+  <Subscribe text="The week's Everyday Why in your inbox. Deep Dives when they're ready." />
+  <PostScripts />
+</Base>
+
+<script>
+  // Build "In this piece" from the section headings, when there are at least three.
+  const toc = document.querySelector<HTMLElement>('[data-toc]');
+  const list = document.querySelector<HTMLOListElement>('[data-toc-list]');
+  const heads = Array.from(document.querySelectorAll<HTMLHeadingElement>('[data-prose] > h2[id], [data-prose] h2.level-h[id]'));
+  const unique = heads.filter((h, i) => heads.indexOf(h) === i);
+  if (toc && list && unique.length >= 3) {
+    unique.forEach((h, i) => {
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = `#${h.id}`;
+      const label = h.querySelector('.level-label');
+      const text = label ? (h.textContent ?? '').replace(label.textContent ?? '', '') : h.textContent ?? '';
+      a.textContent = `${String(i + 1).padStart(2, '0')} · ${text.trim()}`;
+      li.append(a);
+      list.append(li);
+    });
+    toc.hidden = false;
+  }
+</script>
+
+<style>
+  .head {
+    max-width: 948px;
+  }
+  .title {
+    font-size: clamp(40px, 6.2vw, 72px);
+    line-height: 1.02;
+    letter-spacing: -0.045em;
+  }
+  .lede {
+    max-width: 660px;
+    font-size: clamp(19px, 2.2vw, 22px);
+  }
+  .block-bottom {
+    padding-bottom: 56px;
+  }
+  .block-top {
+    padding-top: 64px;
+  }
+  .short {
+    padding: clamp(32px, 5vw, 48px) clamp(24px, 5vw, 56px);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .short-text,
+  .short ul {
+    font-size: clamp(18px, 2vw, 21px);
+    line-height: 1.6;
+    color: var(--ink);
+  }
+  .short ul,
+  .friend ol {
+    margin: 0;
+    padding-left: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px 40px;
+    padding-bottom: 40px;
+    font-size: 16px;
+    color: var(--ink);
+  }
+  .facts > div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .facts .tools {
+    flex-basis: 100%;
+  }
+  .toc {
+    padding-bottom: 48px;
+  }
+  .toc ol {
+    list-style: none;
+    margin: 12px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .toc :global(a) {
+    font-size: 17px;
+    text-decoration: none;
+    color: var(--ink);
+  }
+  .toc :global(a:hover) {
+    color: var(--accent-text);
+  }
+  .log {
+    padding-top: 56px;
+  }
+  .log h2 {
+    font-size: clamp(28px, 3.4vw, 34px);
+    letter-spacing: -0.03em;
+    margin-bottom: 20px;
+  }
+  .log ol,
+  .scores {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--line);
+  }
+  .log li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 24px;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .log li > .meta {
+    flex: 0 0 110px;
+    padding-top: 3px;
+  }
+  .log li > div {
+    flex: 1 1 300px;
+  }
+  .log-title {
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .log-text,
+  .score-note {
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--body);
+  }
+  .scores li {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+  .score-label {
+    font-weight: 600;
+  }
+  .score-note {
+    flex-basis: 100%;
+  }
+  .verdict {
+    margin-top: 20px;
+    font-size: 18px;
+    line-height: 1.6;
+  }
+  .friend {
+    padding: clamp(40px, 6vw, 64px) clamp(24px, 5vw, 56px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 16px;
+  }
+  .friend-text {
+    max-width: 640px;
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: clamp(24px, 3.2vw, 32px);
+    line-height: 1.25;
+    letter-spacing: -0.025em;
+  }
+  .friend ol {
+    max-width: 640px;
+    text-align: left;
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+  .extras {
+    padding-top: 56px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  .sources {
+    border-top: 1px solid var(--line);
+    padding-top: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .sources ol {
+    margin: 0;
+    padding-left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--body);
+  }
+  .sources a {
+    color: var(--ink);
+  }
+  .ai-note {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--muted);
+  }
+  .keep {
+    padding-top: 72px;
+    padding-bottom: clamp(72px, 9vw, 112px);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .keep .row-title {
+    font-size: 20px;
+  }
+</style>

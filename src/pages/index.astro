@@ -1,620 +1,160 @@
 ---
-import { getCollection } from 'astro:content';
-import Subscribe from '../components/Subscribe.astro';
 import Base from '../layouts/Base.astro';
-import { CURRENTLY_CURIOUS, RABBIT_TOPICS, SITE_DESCRIPTION, SITE_TITLE } from '../consts';
-import { expLabel, isAINote, isExperiment, isRabbit, noteUrl, sortNotes } from '../utils';
+import Subscribe from '../components/Subscribe.astro';
+import { DIVES, HOME_INTRO, SITE_DESCRIPTION, SITE_TITLE, TAGLINE, WHYS } from '../consts';
+import { getDives, getWhys, postUrl, readingTime, weekOf } from '../utils';
 
-const all = sortNotes(await getCollection('blog'));
-const ai = all.filter((n) => n.data.stream === 'AI Journey');
-const rabbits = all.filter(isRabbit);
-const latestNote = all.find(isAINote);
-const latestExp = all.find(isExperiment);
-const latestRabbit = rabbits[0];
+const [whys, dives] = await Promise.all([getWhys(), getDives()]);
+const latestWhy = whys[0];
+const earlierWhys = whys.slice(1, 4);
+const recentDives = dives.slice(0, 3);
 
-const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
-
-// Everything published, for the "Random rabbit hole" shuffle.
-const pool = all.map((n) => ({
-  stream: n.data.stream,
-  topic: isRabbit(n)
-    ? n.data.topic
-    : isExperiment(n)
-      ? `${expLabel(n.data.exp).replace('Exp.', 'Experiment')} · ${n.data.topic}`
-      : `Note · ${n.data.topic}`,
-  title: n.data.title,
-  url: noteUrl(n),
-}));
-const first = pool[Math.floor(pool.length / 2)];
+// The main button points at the newest thing worth reading.
+const primary = latestWhy
+  ? { label: "Read this week's Why", href: postUrl(latestWhy) }
+  : dives[0]
+    ? { label: 'Read the latest Deep Dive', href: postUrl(dives[0]) }
+    : undefined;
 ---
 
 <Base title={SITE_TITLE} description={SITE_DESCRIPTION}>
-  <div class="ticker-band" aria-label="Currently curious about">
-    <div class="ticker">
-      {
-        [0, 1].map((copy) => (
-          <div class="ticker-set" aria-hidden={copy === 1 ? 'true' : undefined}>
-            <span>Currently curious about →</span>
-            {CURRENTLY_CURIOUS.map((item) => (
-              <>
-                <span>{item}</span>
-                <span aria-hidden="true">●</span>
-              </>
-            ))}
-          </div>
-        ))
-      }
+  <section class="wrap intro">
+    <h1>{TAGLINE}.</h1>
+    <p class="lede">{HOME_INTRO}</p>
+    <div class="actions">
+      {primary && <a class="btn" href={primary.href}>{primary.label}</a>}
+      <a class="btn-outline" href="#subscribe">Subscribe</a>
     </div>
-  </div>
+  </section>
 
-  <div class="wrap">
-    <section class="intro" aria-label="Introduction">
-      <h1>Notes from an endlessly <span class="red">curious</span> mind.</h1>
-      <p class="mono">
-        Two streams, one lens. My hands on journey with AI, and every rabbit hole I fall into along the way<span class="desk-only">: psychology, history, money, productivity and whatever else catches my eye</span>.
-      </p>
-    </section>
+  {
+    latestWhy && (
+      <section class="this-week" aria-labelledby="this-week">
+        <a class="wrap narrow tw-inner" href={postUrl(latestWhy)}>
+          <p id="this-week" class="kicker">This week's Everyday Why</p>
+          <h2>{latestWhy.data.title}</h2>
+          <p class="lede">{latestWhy.data.description}</p>
+          <span class="more">Read the story ›</span>
+        </a>
+      </section>
+    )
+  }
 
-    <div class="label-row door-label"><span>Pick a door</span><span>2 ways in ↓</span></div>
-    <section id="streams" class="doors" aria-label="Choose a stream">
-      <a href="/ai-journey/" class="door door-red" aria-label="Enter the AI Journey stream">
-        <div class="door-top mono"><span>Stream 01</span><span>{plural(ai.length, 'entry', 'entries')}</span></div>
-        <div>
-          <div class="dt">AI Journey</div>
-          <p class="door-text">
-            Notes on what I'm learning, and numbered experiments where I try, break and build things with AI.<span class="desk-only"> Honest results included.</span>
-          </p>
-          <div class="tags">
-            <span>Notes</span>
-            <span>Experiments</span>
-          </div>
+  {
+    recentDives.length > 0 && (
+      <section class="wrap narrow block" aria-labelledby="deep-dives">
+        <div class="block-head">
+          <h2 id="deep-dives">{DIVES.label}</h2>
+          <p>{DIVES.short}</p>
         </div>
-        <div class="door-foot mono">
-          <span class="latest">
-            {
-              latestNote && (
-                <span class="desk-only">
-                  <span class="dim">Latest note ·</span> {latestNote.data.title}
-                </span>
-              )
-            }
-            {
-              latestExp && (
-                <span>
-                  <span class="dim">Latest experiment ·</span> {expLabel(latestExp.data.exp)} · {latestExp.data.title}{' '}
-                  {latestExp.data.status && <span class="badge">{latestExp.data.status}</span>}
-                </span>
-              )
-            }
-            {!latestNote && !latestExp && <span class="dim">First entry coming soon</span>}
-          </span>
-          <span class="enter" aria-hidden="true"><span class="el">Enter</span><span class="ec">→</span></span>
-        </div>
-      </a>
-
-      <a href="/rabbit-holes/" class="door door-white" aria-label="Enter the Rabbit Holes stream">
-        <div class="door-top mono"><span>Stream 02</span><span>{plural(rabbits.length, 'note', 'notes')}</span></div>
-        <div>
-          <div class="dt">Rabbit Holes</div>
-          <p class="door-text">
-            Things I researched because I could not stop wondering. Explained simply<span class="desk-only">, so you can go deeper too</span>.
-          </p>
-          <div class="tags">
-            {RABBIT_TOPICS.map((t, i) => <span class={i >= 3 ? 'desk-only' : undefined}>{t}</span>)}
-            <span class="mob-only">+{RABBIT_TOPICS.length - 3}</span>
-          </div>
-        </div>
-        <div class="door-foot mono">
-          <span class="latest">
-            {
-              latestRabbit ? (
-                <span>
-                  <span class="dim">Latest ·</span> {latestRabbit.data.title}
-                </span>
-              ) : (
-                <span>
-                  <span class="dim">Latest ·</span> First rabbit hole coming soon
-                </span>
-              )
-            }
-          </span>
-          <span class="enter" aria-hidden="true"><span class="el">Enter</span><span class="ec">→</span></span>
-        </div>
-      </a>
-    </section>
-
-    {
-      first && (
-        <section class="random" aria-label="Random rabbit hole">
-          <div class="label-row">
-            <span>Random rabbit hole</span>
-            <span class="desk-only">Can't decide what to read? Let curiosity choose.</span>
-          </div>
-          <div class="random-body">
-            <div class="pick" aria-live="polite">
-              <span class="pick-meta mono">
-                <span class={`dot ${first.stream === 'AI Journey' ? 'dot-red' : 'dot-white'}`} />
-                <span class="pick-label">
-                  {first.stream} · {first.topic}
-                </span>
+        <div class="rows">
+          {recentDives.map((p) => (
+            <a class="row" href={postUrl(p)}>
+              <span class="row-title">{p.data.title}</span>
+              <span class="meta">
+                {p.data.topic ? `${p.data.topic} · ` : ''}
+                {readingTime(p.body)} min
               </span>
-              <a href={first.url} class="pick-title">
-                <span class="pick-text">{first.title}</span> <span class="red">→</span>
-              </a>
-            </div>
-            {pool.length > 1 && (
-              <button type="button" class="dice" aria-label="Shuffle to another random note">
-                <span class="spin" aria-hidden="true">↻</span>
-                <span class="mono">Shuffle</span>
-              </button>
-            )}
-          </div>
-          <script type="application/json" id="pool" set:html={JSON.stringify(pool)}></script>
-        </section>
-      )
-    }
+            </a>
+          ))}
+        </div>
+        <a class="more center" href={DIVES.href}>All {DIVES.label} ›</a>
+      </section>
+    )
+  }
 
-    <Subscribe />
-  </div>
+  {
+    recentDives.length === 0 && earlierWhys.length > 0 && (
+      <section class="wrap narrow block" aria-labelledby="earlier">
+        <div class="block-head">
+          <h2 id="earlier">Earlier Whys</h2>
+        </div>
+        <div class="rows">
+          {earlierWhys.map((p) => (
+            <a class="row" href={postUrl(p)}>
+              <span class="row-title">{p.data.title}</span>
+              <span class="meta">Week {weekOf(p)}</span>
+            </a>
+          ))}
+        </div>
+        <a class="more center" href={WHYS.href}>All {WHYS.label} ›</a>
+      </section>
+    )
+  }
+
+  <Subscribe />
 </Base>
 
-<script>
-  type Pick = { stream: string; topic: string; title: string; url: string };
-  const data = document.getElementById('pool');
-  const dice = document.querySelector<HTMLButtonElement>('.dice');
-  if (data && dice) {
-    const pool: Pick[] = JSON.parse(data.textContent || '[]');
-    const title = document.querySelector<HTMLAnchorElement>('.pick-title');
-    const text = document.querySelector<HTMLElement>('.pick-text');
-    const label = document.querySelector<HTMLElement>('.pick-label');
-    const dot = document.querySelector<HTMLElement>('.pick-meta .dot');
-    let current = pool.findIndex((p) => p.url === title?.getAttribute('href'));
-
-    const show = (i: number) => {
-      const p = pool[i];
-      current = i;
-      if (title) title.href = p.url;
-      if (text) text.textContent = p.title;
-      if (label) label.textContent = `${p.stream} · ${p.topic}`;
-      dot?.classList.toggle('dot-red', p.stream === 'AI Journey');
-      dot?.classList.toggle('dot-white', p.stream !== 'AI Journey');
-    };
-    dice.addEventListener('click', () => {
-      let n = current;
-      while (n === current) n = Math.floor(Math.random() * pool.length);
-      show(n);
-      dice.classList.remove('rolled');
-      void dice.offsetWidth;
-      dice.classList.add('rolled');
-    });
-  }
-</script>
-
 <style>
-  /* Ticker */
-  .ticker-band {
-    background: var(--red);
-    overflow: hidden;
-    white-space: nowrap;
-  }
-  .ticker {
-    display: inline-flex;
-    animation: tick 40s linear infinite;
-  }
-  .ticker-set {
-    display: inline-flex;
-    gap: 48px;
-    padding: 14px 48px 14px 0;
-    font-family: var(--mono);
-    font-size: 14px;
-  }
-  @keyframes tick {
-    from {
-      transform: translateX(0);
-    }
-    to {
-      transform: translateX(-50%);
-    }
-  }
-
-  /* Intro */
   .intro {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    gap: 32px 0;
-    padding: 72px 0 64px;
-  }
-  h1 {
-    flex: 4 1 640px;
-    padding-right: 32px;
-    font-size: var(--display);
-    line-height: 0.88;
-    letter-spacing: -0.055em;
-  }
-  .intro p {
-    flex: 2 1 280px;
-    font-size: 14px;
-    line-height: 1.6;
-    color: var(--muted);
-  }
-  .door-label {
-    padding-bottom: 16px;
-  }
-
-  /* Doors */
-  .doors {
-    display: flex;
-    flex-wrap: wrap;
-  }
-  .door {
-    flex: 1 1 520px;
-    min-width: 0;
-    min-height: 520px;
-    padding: 40px;
+    max-width: 1000px;
+    padding-top: clamp(88px, 12vw, 136px);
+    padding-bottom: clamp(88px, 12vw, 144px);
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    gap: 32px;
-    overflow: hidden;
+    align-items: center;
+    text-align: center;
+    gap: 28px;
+  }
+  .intro h1 {
+    font-size: clamp(46px, 8vw, 84px);
+    line-height: 1.02;
+    letter-spacing: -0.045em;
+  }
+  .lede {
+    max-width: 600px;
+    font-size: clamp(18px, 2vw, 21px);
+    line-height: 1.55;
+    color: var(--muted);
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
+  .this-week {
+    background: var(--grey-bg);
+  }
+  .tw-inner {
+    padding-top: clamp(80px, 10vw, 120px);
+    padding-bottom: clamp(80px, 10vw, 120px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 20px;
     text-decoration: none;
-    transition:
-      flex-grow 0.55s cubic-bezier(0.2, 0.8, 0.2, 1),
-      background 0.25s,
-      opacity 0.3s;
-  }
-  .door-red {
-    background: var(--red);
-    color: var(--white);
-  }
-  .door-white {
-    background: var(--white);
     color: var(--ink);
   }
-  .door-top {
+  .tw-inner h2 {
+    font-size: clamp(40px, 6vw, 64px);
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+  }
+  .block {
+    padding-top: clamp(80px, 10vw, 112px);
+    padding-bottom: clamp(80px, 10vw, 112px);
     display: flex;
-    justify-content: space-between;
-    font-size: 13px;
+    flex-direction: column;
+    gap: 32px;
   }
-  .dt {
-    font-weight: 800;
-    font-size: clamp(56px, 6.4vw, 104px);
-    line-height: 0.86;
-    letter-spacing: -0.055em;
-    white-space: nowrap;
-    transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+  .block-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
   }
-  .door-text {
-    margin-top: 20px;
-    max-width: 460px;
+  .block-head h2 {
+    font-size: clamp(34px, 4.5vw, 44px);
+    letter-spacing: -0.035em;
+  }
+  .block-head p {
     font-size: 18px;
-    line-height: 1.5;
-  }
-  .tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 24px;
-  }
-  .tags span {
-    padding: 8px 14px;
-    border: 1px solid currentColor;
-    font-family: var(--mono);
-    font-size: 12px;
-  }
-  .door-foot {
-    border-top: 1px solid var(--ink);
-    padding-top: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
-    font-size: 13px;
-  }
-  .door-red .door-foot {
-    border-top-color: rgba(255, 255, 255, 0.5);
-  }
-  .latest {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    line-height: 1.4;
-  }
-  .dim {
-    opacity: 0.75;
-  }
-  .badge {
-    padding: 1px 6px;
-    background: var(--ink);
-    color: var(--white);
-    font-size: 11px;
-  }
-  .enter {
-    flex: 0 0 auto;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-  .el {
-    transition: letter-spacing 0.4s;
-  }
-  .ec {
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--font);
-    font-weight: 700;
-    font-size: 28px;
-    transition:
-      transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
-      background 0.25s,
-      color 0.25s;
-  }
-  .door-red .ec {
-    background: var(--white);
-    color: var(--red);
-  }
-  .door-white .ec {
-    background: var(--ink);
-    color: var(--white);
-  }
-  .door:focus-visible {
-    outline: 3px solid var(--white);
-    outline-offset: -6px;
-  }
-  .door-white:focus-visible {
-    outline-color: var(--red);
-  }
-
-  @media (hover: hover) and (min-width: 1100px) {
-    .doors:hover .door {
-      flex-grow: 1;
-    }
-    .doors .door:hover {
-      flex-grow: 1.55;
-    }
-    .doors:hover .door:not(:hover) {
-      opacity: 0.7;
-    }
-  }
-  @media (hover: hover) {
-    .door-red:hover {
-      background: var(--red-deep);
-    }
-    .door-white:hover {
-      background: #f4f4f2;
-    }
-    .door:hover .dt {
-      transform: translateX(18px);
-    }
-    .door:hover .ec {
-      transform: scale(1.35) rotate(-45deg);
-    }
-    .door-white:hover .ec {
-      background: var(--red);
-      color: var(--white);
-    }
-    .door:hover .el {
-      letter-spacing: 0.08em;
-    }
-  }
-
-  /* Random rabbit hole */
-  .random {
-    margin-top: 120px;
-    border-top: 1px solid var(--white);
-    padding: 20px 0 140px;
-  }
-  .random-body {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 40px 48px;
-    padding-top: 64px;
-  }
-  .pick {
-    flex: 999 1 600px;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-  }
-  .pick-meta {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 13px;
     color: var(--muted);
   }
-  .dot {
-    width: 12px;
-    height: 12px;
-    flex: 0 0 auto;
-  }
-  .dot-red {
-    background: var(--red);
-  }
-  .dot-white {
-    background: var(--white);
-  }
-  .pick-title {
-    font-weight: 800;
-    font-size: var(--big);
-    line-height: 0.88;
-    letter-spacing: -0.055em;
-    text-decoration: none;
-    transition: color 0.2s;
-  }
-  .pick-title:hover {
-    color: var(--red);
-  }
-  .dice {
-    flex: 0 0 auto;
-    width: 200px;
-    height: 200px;
-    border: 0;
-    border-radius: 50%;
-    background: var(--red);
-    color: var(--white);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    transition: background 0.2s;
-  }
-  .dice:hover {
-    background: var(--red-deep);
-  }
-  .spin {
-    display: inline-block;
-    font-size: 64px;
-    line-height: 1;
-    transition: transform 0.4s;
-  }
-  .dice:hover .spin {
-    transform: rotate(180deg);
-  }
-  .dice .mono {
-    font-size: 13px;
-  }
-  .dice.rolled .spin {
-    animation: roll 0.5s ease;
-  }
-  @keyframes roll {
-    from {
-      transform: rotate(0);
-    }
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
-  .mob-only {
-    display: none;
-  }
-
-  /* Phone */
-  @media (max-width: 640px) {
-    .desk-only {
-      display: none !important;
-    }
-    .mob-only {
-      display: inline;
-    }
-    .ticker {
-      animation-duration: 26s;
-    }
-    .ticker-set {
-      gap: 32px;
-      padding: 10px 32px 10px 0;
-      font-size: 12px;
-    }
-    .intro {
-      padding: 40px 0;
-      gap: 20px;
-    }
-    h1 {
-      flex-basis: 100%;
-      padding-right: 0;
-      font-size: 54px;
-    }
-    .intro p {
-      flex-basis: 100%;
-      font-size: 13px;
-    }
-    .door-label {
-      font-size: 12px;
-      padding-bottom: 12px;
-    }
-    .doors {
-      margin: 0 calc(-1 * var(--gutter));
-    }
-    .door {
-      flex-basis: 100%;
-      min-height: 420px;
-      padding: 24px 16px;
-      gap: 28px;
-    }
-    .door-top {
-      font-size: 12px;
-    }
-    .dt {
-      font-size: 60px;
-    }
-    .door-text {
-      margin-top: 14px;
-      font-size: 16px;
-    }
-    .tags {
-      gap: 6px;
-      margin-top: 16px;
-    }
-    .tags span {
-      padding: 6px 10px;
-      font-size: 11px;
-    }
-    .door-foot {
-      padding-top: 14px;
-      gap: 12px;
-      font-size: 11px;
-      line-height: 1.5;
-    }
-    .el {
-      display: none;
-    }
-    .ec {
-      width: 52px;
-      height: 52px;
-      font-size: 22px;
-    }
-    .random {
-      margin-top: 80px;
-      padding: 14px 0 80px;
-    }
-    .random .label-row {
-      font-size: 12px;
-    }
-    .random-body {
-      padding-top: 32px;
-      gap: 32px;
-    }
-    .pick {
-      flex-basis: 100%;
-      gap: 14px;
-    }
-    .pick-meta {
-      font-size: 12px;
-      gap: 8px;
-    }
-    .dot {
-      width: 10px;
-      height: 10px;
-    }
-    .pick-title {
-      font-size: 44px;
-      line-height: 0.9;
-      letter-spacing: -0.05em;
-    }
-    .dice {
-      width: 140px;
-      height: 140px;
-      gap: 4px;
-    }
-    .spin {
-      font-size: 44px;
-    }
-    .dice .mono {
-      font-size: 12px;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .ticker {
-      animation: none;
-    }
+  .center {
+    align-self: center;
   }
 </style>

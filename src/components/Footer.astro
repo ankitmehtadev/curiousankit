@@ -3,17 +3,15 @@ import { AUTHOR, LINKS } from '../consts';
 const year = new Date().getFullYear();
 ---
 
-<footer class="site-footer wrap">
-  <div class="inner">
-    <span class="who">
-      <span class="icon" aria-hidden="true"><span class="ring"><span class="stick"></span></span></span>
-      &copy; {year} {AUTHOR.name} · {AUTHOR.city}
-    </span>
+<footer class="site-footer">
+  <div class="wrap inner">
+    <span>&copy; {year} {AUTHOR.name} · curiousankit.com</span>
     <span class="links">
+      <a href="/shelf/">Shelf</a>
+      <a href={LINKS.linkedin}>LinkedIn</a>
       <a href={LINKS.github}>GitHub</a>
-      {LINKS.linkedin && <a href={LINKS.linkedin}>LinkedIn</a>}
       <a href="/rss.xml">RSS</a>
-      <a href={`mailto:${LINKS.email}`}>{LINKS.email}</a>
+      <a href={`mailto:${LINKS.email}`}>Email</a>
     </span>
   </div>
 </footer>
@@ -22,56 +20,23 @@ const year = new Date().getFullYear();
   .inner {
     display: flex;
     flex-wrap: wrap;
+    justify-content: space-between;
     align-items: center;
-    gap: 16px 32px;
-    padding: 32px 0;
-    border-top: 1px solid var(--border);
-    font-family: var(--mono);
+    gap: 12px 24px;
+    padding-top: 28px;
+    padding-bottom: 28px;
     font-size: 13px;
-    color: var(--smoke);
-  }
-  .who {
-    flex: 1 1 260px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .icon {
-    width: 28px;
-    height: 28px;
-    background: var(--charcoal);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .ring {
-    display: block;
-    position: relative;
-    width: 13px;
-    height: 13px;
-    border: 3px solid var(--red);
-    border-radius: 50%;
-    margin: -3px 0 0 -3px;
-  }
-  .stick {
-    position: absolute;
-    width: 3px;
-    height: 7px;
-    background: var(--red);
-    right: -5px;
-    bottom: -6px;
-    transform: rotate(-45deg);
+    color: var(--muted);
   }
   .links {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px 24px;
+    gap: 8px 20px;
   }
-  .links a {
-    color: var(--white);
-    text-decoration: none;
+  a {
+    color: var(--muted);
   }
-  .links a:hover {
-    color: var(--red);
+  a:hover {
+    color: var(--ink);
   }
 </style>

@@ -1,0 +1,76 @@
+---
+import Base from '../../layouts/Base.astro';
+import Subscribe from '../../components/Subscribe.astro';
+import { SITE_TITLE, WHYS } from '../../consts';
+import { getWhys, monthLabel, postUrl, readingTime, weekOf } from '../../utils';
+
+const whys = await getWhys();
+
+// Group by month, newest first.
+const months: { label: string; items: typeof whys }[] = [];
+for (const post of whys) {
+  const label = monthLabel(post.data.pubDate);
+  const last = months[months.length - 1];
+  if (last && last.label === label) last.items.push(post);
+  else months.push({ label, items: [post] });
+}
+---
+
+<Base title={`${WHYS.label} | ${SITE_TITLE}`} description={WHYS.blurb}>
+  <section class="wrap narrow hero">
+    <h1>{WHYS.label}</h1>
+    <p class="lede">{WHYS.blurb}</p>
+    <a class="btn" href="#subscribe">Get them by email</a>
+  </section>
+
+  <section class="wrap narrow list" aria-label={`All ${WHYS.label}`}>
+    {
+      months.length === 0 ? (
+        <p class="empty">The first one lands soon.</p>
+      ) : (
+        months.map((m) => (
+          <div class="month">
+            <h2 class="meta">{m.label}</h2>
+            <div class="rows">
+              {m.items.map((p) => (
+                <a class="row" href={postUrl(p)}>
+                  <span class="row-title">{p.data.title}</span>
+                  <span class="meta">
+                    Week {weekOf(p)} · {readingTime(p.body)} min
+                  </span>
+                </a>
+              ))}
+            </div>
+          </div>
+        ))
+      )
+    }
+  </section>
+
+  <Subscribe variant="light" title="Next week's Why, in your inbox." text="" />
+</Base>
+
+<style>
+  .list {
+    padding-bottom: clamp(72px, 9vw, 112px);
+    display: flex;
+    flex-direction: column;
+    gap: 56px;
+  }
+  .month {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .month h2 {
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+  }
+  .empty {
+    text-align: center;
+    font-size: 18px;
+    color: var(--muted);
+  }
+</style>

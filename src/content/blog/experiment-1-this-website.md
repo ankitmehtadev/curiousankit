@@ -3,11 +3,9 @@ title: 'This website'
 description: 'What happened when I ran a website like a business analysis project, with AI as the delivery team. Then tore it down two weeks later and did it all again.'
 pubDate: 'Oct 04 2026'
 updatedDate: 'Oct 19 2026'
-stream: 'AI Journey'
+type: 'Deep Dive'
 format: 'Experiment'
-topic: 'Builds'
-exp: 1
-status: 'Done'
+topic: 'AI'
 question: 'Can I run a website the way I run a business analysis project, with AI as the delivery team?'
 outcome: 'Worked'
 tools: ['Claude', 'Claude Design', 'Claude Code', 'Astro', 'Cloudflare', 'GitHub', 'Kit']
