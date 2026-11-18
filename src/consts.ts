@@ -37,8 +37,8 @@ export const LINKS = {
 export const ABOUT = {
   heading: "I'm Ankit, a technologist based in Melbourne.",
   bio: "For over 12 years I've worked across digital transformation, enterprise procurement, SaaS delivery and AI experiments, mentoring people along the way. I'm the person who keeps reading past the first answer. This is where I share what I find.",
-  // Leave empty ([]) to hide the "Currently" line.
-  currently: ['An AI course', "Poor Charlie's Almanack"],
+  // Add items, e.g. ['An AI course'], to show a "Currently" line. Empty hides it.
+  currently: [] as string[],
 };
 
 // Email sign up through Kit.
