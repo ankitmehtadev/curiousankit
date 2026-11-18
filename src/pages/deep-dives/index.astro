@@ -5,6 +5,8 @@ import { formatDate, getDives, kickerOf, postUrl, readingTime } from '../../util
 
 const dives = await getDives();
 const topics = Array.from(new Set(dives.map((p) => p.data.topic).filter(Boolean))).sort();
+// "Money · Experiment": the kicker without the leading "Deep Dive".
+const label = (p: (typeof dives)[number]) => kickerOf(p).split(' · ').slice(1).join(' · ') || 'Deep Dive';
 ---
 
 <Base title={`${DIVES.label} | ${SITE_TITLE}`} description={DIVES.blurb}>
@@ -37,7 +39,7 @@ const topics = Array.from(new Set(dives.map((p) => p.data.topic).filter(Boolean)
           {dives.map((p) => (
             <a class="row dive" href={postUrl(p)} data-topic={p.data.topic}>
               <span class="meta">
-                {kickerOf(p).replace(/^Deep Dive · /, '')} · {formatDate(p.data.pubDate)} · {readingTime(p.body)} min read
+                {label(p)} · {formatDate(p.data.pubDate)} · {readingTime(p.body)} min read
               </span>
               <span class="dive-title">{p.data.title}</span>
               <span class="dive-desc">{p.data.description}</span>
