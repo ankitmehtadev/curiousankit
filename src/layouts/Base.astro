@@ -7,7 +7,7 @@ interface Props {
   title: string;
   description: string;
   image?: string;
-  // Hide the site footer (used by the one screen About page).
+  // Hide the site footer.
   footer?: boolean;
 }
 
@@ -42,7 +42,8 @@ const { title, description, image, footer = true } = Astro.props;
     padding: 10px 14px;
     margin: 0;
     clip: auto;
-    background: var(--red);
-    color: var(--white);
+    background: var(--ink);
+    color: #fff;
+    border-radius: 999px;
   }
 </style>

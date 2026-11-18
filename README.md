@@ -1,6 +1,6 @@
 # Curious Ankit
 
-Notes from an endlessly curious mind. Built with Astro, hosted on Cloudflare (Workers static assets), deployed from `main`.
+Notes from a technologist who can't stop asking why. Built with Astro, hosted on Cloudflare (Workers static assets), deployed from `main`.
 
 ## Run it
 
@@ -14,11 +14,10 @@ npm run build            # output in ./dist
 
 Copy one of the templates in `src/content/blog/`, rename it without the leading underscore, and fill it in:
 
-| Template | Stream | Address |
+| Template | Kind | Address |
 | --- | --- | --- |
-| `_template-ai-note.mdx` | AI Journey, Note | `/notes/<file-name>/` |
-| `_template-experiment.mdx` | AI Journey, Experiment (numbered Exp. 001 …) | `/experiments/<file-name>/` |
-| `_template-rabbit-hole.mdx` | Rabbit Holes (Mind, History, Money, Productivity, Wildcard) | `/rabbit-holes/<file-name>/` |
+| `_template-everyday-why.md` | Everyday Why: the weekly 200 to 400 word story behind an everyday thing | `/everyday-whys/<file-name>/` |
+| `_template-deep-dive.mdx` | Deep Dive: a longer piece on one question (set `format: 'Experiment'` for experiments) | `/deep-dives/<file-name>/` |
 
 Every field is explained inside the template. Files that start with `_` are never published.
 

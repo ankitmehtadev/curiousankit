@@ -1,11 +1,12 @@
-/* Article body styles, shared by the three post templates.
+/* Article body styles, shared by both post templates.
    Everything is scoped under .prose so it never leaks into the rest of the site. */
 
 .prose {
-  max-width: 720px;
-  font-size: 20px;
+  max-width: var(--read);
+  margin: 0 auto;
+  font-size: 18px;
   line-height: 1.7;
-  color: var(--body);
+  color: var(--ink-2);
 }
 
 .prose > :first-child {
@@ -18,34 +19,37 @@
 
 .prose h2 {
   margin: 64px 0 20px;
-  font-weight: 800;
-  font-size: 44px;
-  line-height: 0.95;
-  letter-spacing: -0.045em;
-  color: var(--white);
-  scroll-margin-top: 24px;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: clamp(28px, 3.4vw, 34px);
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  scroll-margin-top: 88px;
 }
 
 .prose h3 {
-  margin: 40px 0 14px;
-  font-weight: 800;
-  font-size: 28px;
-  line-height: 1;
-  letter-spacing: -0.035em;
-  color: var(--white);
-  scroll-margin-top: 24px;
+  margin: 44px 0 14px;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  scroll-margin-top: 88px;
 }
 
 .prose h4 {
   margin: 32px 0 10px;
   font-family: var(--mono);
   font-weight: 500;
-  font-size: 14px;
-  letter-spacing: 0;
-  color: var(--red);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-text);
 }
 
-/* AI notes number their sections: 01, 02, 03 ... */
+/* Numbered sections: 01, 02, 03 ... */
 .prose.numbered {
   counter-reset: section;
 }
@@ -57,146 +61,113 @@
   display: block;
   margin-bottom: 10px;
   font-family: var(--mono);
-  font-size: 14px;
   font-weight: 500;
-  letter-spacing: 0;
-  color: var(--red);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: var(--accent-text);
 }
 
 .prose a {
-  color: var(--white);
-  text-decoration-color: var(--red);
-  text-underline-offset: 4px;
-  text-decoration-thickness: 2px;
-  transition: color 0.2s;
+  color: var(--accent-text);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
 }
 .prose a:hover {
-  color: var(--red);
+  color: var(--ink);
 }
 
 .prose strong {
-  color: var(--white);
-  font-weight: 700;
+  font-weight: 600;
+  color: var(--ink);
 }
 
 .prose ul,
 .prose ol {
   margin: 0 0 24px;
-  padding-left: 1.3em;
+  padding-left: 24px;
 }
 .prose li {
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
-.prose ul li::marker {
-  color: var(--red);
-}
+.prose ul li::marker,
 .prose ol li::marker {
-  color: var(--red);
-  font-weight: 800;
+  color: var(--muted);
 }
 
 .prose hr {
-  margin: 56px 0;
+  margin: 56px auto;
+  width: 64px;
   border: 0;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--line);
 }
 
-/* A plain markdown quote becomes a pull quote. */
 .prose blockquote {
-  margin: 56px 0;
-  padding: 0;
-  border: 0;
+  margin: 40px 0;
+  padding: 4px 0 4px 24px;
+  border-left: 3px solid var(--accent);
 }
 .prose blockquote p {
   margin: 0;
-  font-weight: 800;
-  font-size: 44px;
-  line-height: 0.98;
-  letter-spacing: -0.045em;
-  color: var(--red);
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 22px;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  color: var(--ink);
 }
 
-.prose code {
-  padding: 2px 6px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  font-family: var(--mono);
-  font-size: 0.8em;
-  color: var(--white);
-}
-
-.prose pre {
+/* Margin notes: <aside class="note"><em>Margin note.</em> ...</aside> */
+.prose aside.note {
   margin: 32px 0;
-  padding: 18px 16px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  overflow-x: auto;
-  font-family: var(--mono);
-  font-size: 15px;
+  padding: 20px 24px;
+  border-radius: 18px;
+  background: var(--grey-bg);
+  font-size: 16px;
   line-height: 1.6;
-  color: var(--white);
-  white-space: pre-wrap;
+  color: var(--body);
+}
+.prose aside.note em:first-child {
+  display: block;
+  margin-bottom: 4px;
+  font-family: var(--mono);
+  font-style: normal;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-text);
+}
+
+/* Code */
+.prose code {
+  font-family: var(--mono);
+  font-size: 0.85em;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: var(--grey-bg);
+}
+.prose pre {
+  margin: 0 0 24px;
+  padding: 20px 22px;
+  overflow-x: auto;
+  border-radius: 16px;
+  background: var(--grey-bg);
+  font-size: 14px;
+  line-height: 1.6;
 }
 .prose pre code {
   padding: 0;
   background: none;
-  border: 0;
   font-size: inherit;
 }
 
-.prose img {
-  max-width: 100%;
-  height: auto;
-  border: 1px solid var(--border);
-}
-
-.prose figure {
-  margin: 40px 0;
-}
-.prose figure > p {
-  margin: 0;
-}
-.prose figcaption {
-  margin-top: 10px;
-  font-family: var(--mono);
-  font-size: 12px;
-  line-height: 1.6;
-  color: var(--smoke);
-}
-
-.prose table {
-  width: 100%;
-  margin: 32px 0;
-  border-collapse: collapse;
-  font-size: 16px;
-}
-.prose th {
-  padding: 10px 12px 10px 0;
-  border-bottom: 1px solid var(--white);
-  font-family: var(--mono);
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--smoke);
-  text-align: left;
-}
-.prose td {
-  padding: 12px 12px 12px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.prose sup a {
-  font-family: var(--mono);
-  font-size: 12px;
-  text-decoration: none;
-  color: var(--red);
-}
-
-/* Prompt boxes: the <Prompt> component, and the older <figure class="prompt"> markup. */
+/* Prompt boxes: <Prompt> and the older <figure class="prompt"> */
 .prose .prompt-box,
 .prose figure.prompt {
   margin: 32px 0;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--grey-bg);
+  overflow: hidden;
 }
 .prose .prompt-head,
 .prose figure.prompt > figcaption {
@@ -205,92 +176,92 @@
   align-items: center;
   gap: 12px;
   margin: 0;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--border);
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--line);
   font-family: var(--mono);
   font-size: 12px;
-  color: var(--smoke);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 .prose .prompt-box pre,
 .prose figure.prompt pre {
   margin: 0;
-  border: 0;
-  background: none;
+  border-radius: 0;
+  background: transparent;
+  white-space: pre-wrap;
 }
 .prose .copy-btn {
-  flex: 0 0 auto;
   min-height: 32px;
-  padding: 0 12px;
-  border: 1px solid #5e5e5a;
-  background: transparent;
-  color: var(--white);
-  font-family: var(--mono);
-  font-size: 12px;
-  transition: background 0.2s, color 0.2s;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid #d4d4d8;
+  background: #fff;
+  font-family: var(--font);
+  font-size: 13px;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--ink);
 }
 .prose .copy-btn:hover {
-  background: var(--white);
+  border-color: var(--ink);
+}
+
+/* Figures and screenshots */
+.prose figure {
+  margin: 40px 0;
+}
+.prose figure > p {
+  margin: 0;
+}
+.prose img {
+  border-radius: 20px;
+}
+.prose figcaption {
+  margin-top: 12px;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+/* <figure class="shot wide"> breaks a little wider than the text on big screens */
+@media (min-width: 900px) {
+  .prose figure.shot.wide {
+    margin-left: -80px;
+    margin-right: -80px;
+  }
+}
+
+/* Tables */
+.prose table {
+  width: 100%;
+  margin: 0 0 24px;
+  border-collapse: collapse;
+  font-size: 16px;
+  display: block;
+  overflow-x: auto;
+}
+.prose th,
+.prose td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.prose th {
+  font-weight: 600;
   color: var(--ink);
 }
 
-/* Screenshots: <figure class="shot"> */
-.prose figure.shot img {
-  width: 100%;
-}
-
-/* Side notes: <aside class="note"><em>Margin note.</em> ...</aside> */
-.prose aside.note {
-  margin: 8px 0 28px;
-  padding: 4px 0 4px 18px;
-  border-left: 3px solid var(--red);
-  font-size: 16px;
-  line-height: 1.6;
-  color: var(--muted);
-}
-.prose aside.note em:first-child {
-  display: block;
-  margin-bottom: 4px;
-  font-family: var(--mono);
-  font-style: normal;
-  font-size: 12px;
-  color: var(--red);
+.prose sup a {
+  text-decoration: none;
 }
 
 @media (max-width: 640px) {
   .prose {
-    font-size: 18px;
-  }
-  .prose p {
-    margin-bottom: 20px;
+    font-size: 17px;
   }
   .prose h2 {
     margin-top: 48px;
-    margin-bottom: 14px;
-    font-size: 34px;
-  }
-  .prose.numbered > h2::before {
-    font-size: 12px;
-    margin-bottom: 8px;
-  }
-  .prose blockquote {
-    margin: 36px 0;
-  }
-  .prose blockquote p {
-    font-size: 32px;
-  }
-  .prose pre {
-    font-size: 13px;
-    padding: 14px 12px;
-  }
-  .prose .prompt-head,
-  .prose figure.prompt > figcaption {
-    padding: 8px 12px;
-    font-size: 11px;
-  }
-  .prose figure {
-    margin: 28px 0;
-  }
-  .prose figcaption {
-    font-size: 11px;
   }
 }

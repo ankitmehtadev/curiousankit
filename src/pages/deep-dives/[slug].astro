@@ -1,0 +1,30 @@
+---
+import { render, type CollectionEntry } from 'astro:content';
+import DeepDiveLayout from '../../layouts/DeepDiveLayout.astro';
+import { getDives } from '../../utils';
+
+// One page per Deep Dive, at /deep-dives/<slug>/.
+// "Keep reading" shows the next two Deep Dives, wrapping round to the newest.
+export async function getStaticPaths() {
+  const dives = await getDives();
+  return dives.map((post, i) => ({
+    params: { slug: post.id },
+    props: {
+      post,
+      more: [1, 2].map((k) => dives[(i + k) % dives.length]).filter((p, j, a) => p.id !== post.id && a.indexOf(p) === j),
+    },
+  }));
+}
+
+type Props = {
+  post: CollectionEntry<'blog'>;
+  more: CollectionEntry<'blog'>[];
+};
+
+const { post, more } = Astro.props;
+const { Content } = await render(post);
+---
+
+<DeepDiveLayout post={post} more={more}>
+  <Content />
+</DeepDiveLayout>

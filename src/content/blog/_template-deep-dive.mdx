@@ -1,0 +1,49 @@
+---
+# Copy this file, rename it and remove the underscore to publish.
+# The address will be /deep-dives/<file-name>/
+title: 'The why question, as the title'
+# A one line subtitle that says what you found, or why it matters.
+description: 'One line subtitle goes here.'
+pubDate: 'Dec 01 2026'
+type: 'Deep Dive'
+# One short topic, used for the filter pills: AI, Money, Productivity, Design, Tech, History ...
+topic: 'AI'
+# Use 'Experiment' for an experiment write up (adds an Experiment tag). Otherwise leave as 'Note'.
+format: 'Note'
+tags: []
+
+# "The short answer": one line, or a few bullets, for skimmers.
+surface:
+  - 'If they stop here, they still leave with the answer.'
+
+# "What I'd tell a friend": the takeaways.
+takeaways:
+  - 'The takeaway in a sentence.'
+
+sources:
+  - label: 'Source title, Publisher'
+    url: 'https://example.com'
+
+# Optional one line note.
+# aiNote: 'Research leads and a grammar check.'
+---
+
+import Level from '../../components/post/Level.astro';
+import PullQuote from '../../components/post/PullQuote.astro';
+import KeyIdea from '../../components/post/KeyIdea.astro';
+
+<Level n={1} title="Section heading" />
+
+Set up the context: what you noticed, and what you wanted to find out.
+
+<Level n={2} title="Section heading" />
+
+What you found. Evidence and examples.
+
+<PullQuote>The single line worth sharing.</PullQuote>
+
+<Level n={3} title="Section heading" />
+
+What it means. Your view, the open questions, and what you'd look into next.
+
+<KeyIdea>The one thing to remember.</KeyIdea>

@@ -6,10 +6,10 @@
 //   by        author for books, director or creator for movies and series
 //   genres    one or more genres. The first one is printed on the card. Filters use all of them.
 //   language  movies and series only (books are not filtered by language)
-//   note      optional one line on why you recommend it (shown as a tooltip for now)
-//   reading   optional, true for a book you are still reading. It gets a "Reading now" stamp.
+//   note      optional one line on why you recommend it (shown as a tooltip)
+//   reading   optional, true for a book you are still reading. It shows under "Reading now".
 //
-// Entries are numbered (No. 001, No. 002 ...) in the order they appear here.
+// Entries show in the order they appear here.
 
 export type ShelfType = 'Book' | 'Movie' | 'Series';
 

@@ -4,19 +4,20 @@ import fs from 'node:fs';
 import path from 'node:path';
 import satori from 'satori';
 import sharp from 'sharp';
-import { expLabel, formatDate, isExperiment, isRabbit, sectionOf, type Note } from '../../utils';
+import { formatDate, kickerOf, sectionOf, type Post as Note } from '../../utils';
 
 // Share images (1200 x 630), made at build time in the site's own brand.
 //   /og/default.png            the site card
-//   /og/<section>/<post>.png   one card per post, showing its stream and title
+//   /og/<section>/<post>.png   one card per post, showing its kind and title
 
 const W = 1200;
 const H = 630;
-const INK = '#0B0B0B';
+// Archivo stands in for Inter Tight here, because it is the font installed for build time images.
+const INK = '#18181B';
 const WHITE = '#FFFFFF';
-const RED = '#D93A3A';
-const SMOKE = '#8C8C8C';
-const GRID = '#1A1A1A';
+const RED = '#4F46E5'; // the accent (indigo)
+const SMOKE = '#52525B';
+const GREY = '#F5F5F7';
 
 const fontFile = (pkg: string, file: string) =>
   fs.readFileSync(path.join(process.cwd(), 'node_modules', '@fontsource', pkg, 'files', file));
@@ -45,11 +46,11 @@ const mono = (size: number, color = WHITE, extra: Record<string, unknown> = {}) 
   ...extra,
 });
 
-// The Lens wordmark: Curi(o)us over Ankit, the o drawn as a red magnifying glass.
-function logo(size: number, color = WHITE) {
+// The Lens wordmark: Curi(o)us over Ankit, the o drawn as a magnifying glass in the accent colour.
+function logo(size: number, color = INK) {
   const ring = size * 0.5;
   const stroke = size * 0.11;
-  const text = { fontFamily: 'Archivo', fontWeight: 800, fontSize: size, lineHeight: 0.86, letterSpacing: -0.05 * size, color };
+  const text = { fontFamily: 'Archivo', fontWeight: 800, fontSize: size, lineHeight: 0.92, letterSpacing: -0.04 * size, color };
   return h('div', { flexDirection: 'column' }, [
     h('div', { alignItems: 'flex-end' }, [
       h('div', text, 'Curi'),
@@ -71,70 +72,47 @@ function logo(size: number, color = WHITE) {
   ]);
 }
 
-// The six column grid that runs behind the site.
-function grid() {
-  return h(
-    'div',
-    { position: 'absolute', top: 0, left: 0, width: W, height: H },
-    Array.from({ length: 6 }, (_, i) => h('div', { position: 'absolute', top: 0, left: (W / 6) * i, width: 1, height: H, background: GRID })),
-  );
-}
-
-function frame(children: any[], bg = INK) {
-  return h('div', { width: W, height: H, position: 'relative', background: bg, color: WHITE }, [
-    grid(),
+function frame(children: any[], bg = WHITE) {
+  return h('div', { width: W, height: H, position: 'relative', background: bg, color: INK }, [
     h('div', { position: 'relative', width: W, height: H, flexDirection: 'column', justifyContent: 'space-between', padding: '56px 64px' }, children),
   ]);
 }
 
 function siteCard() {
-  const big = { fontFamily: 'Archivo', fontWeight: 800, fontSize: 96, lineHeight: 0.88, letterSpacing: -5 };
+  const big = { fontFamily: 'Archivo', fontWeight: 800, fontSize: 84, lineHeight: 1, letterSpacing: -3.5, color: INK };
   return frame([
-    h('div', { justifyContent: 'space-between', alignItems: 'flex-start' }, [logo(56), h('div', mono(20, SMOKE), 'curiousankit.com')]),
+    h('div', { justifyContent: 'space-between', alignItems: 'flex-start' }, [logo(52), h('div', mono(20, SMOKE), 'curiousankit.com')]),
     h('div', { flexDirection: 'column' }, [
-      h('div', big, 'Notes from an'),
-      h('div', big, [h('span', { marginRight: 26 }, 'endlessly'), h('span', { color: RED, marginRight: 26 }, 'curious'), h('span', {}, 'mind.')]),
+      h('div', big, 'Notes from a technologist who'),
+      h('div', big, "can't stop asking why."),
     ]),
     h('div', { gap: 16 }, [
-      h('div', { ...mono(20), padding: '10px 16px', background: RED }, 'AI Journey'),
-      h('div', { ...mono(20, INK), padding: '10px 16px', background: WHITE }, 'Rabbit Holes'),
+      h('div', { ...mono(20, INK, { fontWeight: 500 }), padding: '10px 18px', background: GREY, borderRadius: 999 }, 'Everyday Whys'),
+      h('div', { ...mono(20, INK, { fontWeight: 500 }), padding: '10px 18px', background: GREY, borderRadius: 999 }, 'Deep Dives'),
     ]),
   ]);
 }
 
 function titleSize(title: string) {
   const n = title.length;
-  if (n <= 20) return 120;
-  if (n <= 34) return 104;
-  if (n <= 50) return 88;
-  if (n <= 70) return 74;
-  return 62;
-}
-
-function streamLabel(note: Note) {
-  if (isRabbit(note)) return `Rabbit Hole · ${note.data.topic}`;
-  if (isExperiment(note)) return `AI Journey · ${expLabel(note.data.exp)}`;
-  return 'AI Journey · Note';
+  if (n <= 20) return 112;
+  if (n <= 34) return 96;
+  if (n <= 50) return 82;
+  if (n <= 70) return 68;
+  return 58;
 }
 
 function postCard(note: Note) {
   const title = note.data.title.length > 110 ? note.data.title.slice(0, 107).trimEnd() + '...' : note.data.title;
-  const rabbit = isRabbit(note);
   const size = titleSize(title);
   return frame([
     h('div', { justifyContent: 'space-between', alignItems: 'flex-start' }, [
-      logo(44),
-      h(
-        'div',
-        rabbit
-          ? { ...mono(20, INK, { fontWeight: 500 }), padding: '10px 16px', background: WHITE }
-          : { ...mono(20, WHITE, { fontWeight: 500 }), padding: '10px 16px', background: RED },
-        streamLabel(note),
-      ),
+      logo(40),
+      h('div', { ...mono(20, RED, { fontWeight: 500, textTransform: 'uppercase', letterSpacing: 1.5 }), paddingTop: 6 }, kickerOf(note)),
     ]),
-    h('div', { fontFamily: 'Archivo', fontWeight: 800, fontSize: size, lineHeight: 0.9, letterSpacing: -0.05 * size, paddingRight: 40 }, title),
+    h('div', { fontFamily: 'Archivo', fontWeight: 800, fontSize: size, lineHeight: 1, letterSpacing: -0.04 * size, color: INK, paddingRight: 40 }, title),
     h('div', { flexDirection: 'column', width: '100%' }, [
-      h('div', { height: 2, width: '100%', background: WHITE }),
+      h('div', { height: 1, width: '100%', background: '#E4E4E7' }),
       h('div', { justifyContent: 'space-between', marginTop: 20 }, [
         h('div', mono(20, SMOKE), 'curiousankit.com'),
         h('div', mono(20, SMOKE), formatDate(note.data.pubDate)),

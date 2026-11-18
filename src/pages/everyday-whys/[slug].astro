@@ -1,0 +1,26 @@
+---
+import { render, type CollectionEntry } from 'astro:content';
+import WhyLayout from '../../layouts/WhyLayout.astro';
+import { getWhys } from '../../utils';
+
+// One page per Everyday Why, at /everyday-whys/<slug>/. "Last week" links to the one before it.
+export async function getStaticPaths() {
+  const whys = await getWhys();
+  return whys.map((post, i) => ({
+    params: { slug: post.id },
+    props: { post, previous: whys[i + 1] },
+  }));
+}
+
+type Props = {
+  post: CollectionEntry<'blog'>;
+  previous?: CollectionEntry<'blog'>;
+};
+
+const { post, previous } = Astro.props;
+const { Content } = await render(post);
+---
+
+<WhyLayout post={post} previous={previous}>
+  <Content />
+</WhyLayout>

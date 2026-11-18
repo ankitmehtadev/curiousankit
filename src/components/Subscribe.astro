@@ -1,29 +1,26 @@
 ---
-// The big "Curious things, straight to your inbox." block. Used on Home, the stream pages and /subscribe.
+// The centred email sign up band. variant="dark" is the near-black band, "light" the grey one.
 import { LINKS, SUBSCRIBE_ACTION, SUBSCRIBE_FIELD } from '../consts';
 
 interface Props {
-  label?: string;
-  aside?: string;
   id?: string;
-  // The big line, with its last words in red: pitch + accent.
-  pitch?: string;
-  accent?: string;
+  title?: string;
+  text?: string;
+  variant?: 'dark' | 'light';
 }
 const {
-  label = 'Notes by email',
-  aside = 'No spam. Unsubscribe anytime.',
   id = 'subscribe',
-  pitch = 'Curious things, straight to your',
-  accent = 'inbox.',
+  title = 'One short story, every week.',
+  text = "The week's Everyday Why in your inbox. No spam.",
+  variant = 'dark',
 } = Astro.props;
 const inputId = `${id}-email`;
 ---
 
-<section id={id} class="subscribe" aria-label="Subscribe">
-  <div class="label-row"><span>{label}</span><span>{aside}</span></div>
-  <div class="body">
-    <p class="pitch">{pitch} <span class="red">{accent}</span></p>
+<section id={id} class:list={['subscribe', variant]} aria-labelledby={`${id}-title`}>
+  <div class="wrap inner">
+    <h2 id={`${id}-title`}>{title}</h2>
+    {text && <p class="text">{text}</p>}
     <form
       class="sub-form"
       action={SUBSCRIBE_ACTION || undefined}
@@ -31,17 +28,15 @@ const inputId = `${id}-email`;
       target={SUBSCRIBE_ACTION ? '_blank' : undefined}
       data-fallback={SUBSCRIBE_ACTION ? undefined : LINKS.email}
     >
-      <label for={inputId} class="mono">Your email</label>
-      <div class="line">
-        <input id={inputId} type="email" name={SUBSCRIBE_FIELD} placeholder="you@example.com" required autocomplete="email" />
-        <button type="submit" class="btn">Subscribe</button>
-      </div>
+      <label for={inputId} class="sr-only">Email address</label>
+      <input id={inputId} type="email" name={SUBSCRIBE_FIELD} placeholder="you@email.com" required autocomplete="email" />
+      <button type="submit">Subscribe</button>
     </form>
   </div>
 </section>
 
 <script>
-  // Until a newsletter service is set up, a sign up opens an email to Ankit instead.
+  // Without a newsletter service, a sign up opens an email to Ankit instead.
   document.querySelectorAll<HTMLFormElement>('form.sub-form').forEach((form) => {
     form.addEventListener('submit', (e) => {
       const button = form.querySelector('button');
@@ -57,76 +52,84 @@ const inputId = `${id}-email`;
 </script>
 
 <style>
-  .subscribe {
-    border-top: 1px solid var(--white);
-    padding: 20px 0 120px;
+  .subscribe.dark {
+    background: var(--ink);
+    color: #fff;
   }
-  .body {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    gap: 40px 48px;
-    padding-top: 64px;
+  .subscribe.light {
+    background: var(--grey-bg);
+    color: var(--ink);
   }
-  .pitch {
-    flex: 3 1 560px;
-    font-weight: 800;
-    font-size: var(--big);
-    line-height: 0.88;
-    letter-spacing: -0.055em;
-  }
-  form {
-    flex: 2 1 380px;
+  .inner {
+    max-width: 688px;
+    padding-top: clamp(72px, 9vw, 112px);
+    padding-bottom: clamp(72px, 9vw, 112px);
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    align-items: center;
+    text-align: center;
+    gap: 18px;
   }
-  label {
-    font-size: 13px;
+  h2 {
+    font-size: clamp(34px, 5vw, 48px);
+    line-height: 1.05;
+    letter-spacing: -0.035em;
+  }
+  .text {
+    font-size: 18px;
+    line-height: 1.55;
+  }
+  .dark .text {
+    color: #d4d4d8;
+  }
+  .light .text {
     color: var(--muted);
   }
-  .line {
+  form {
+    width: 100%;
+    max-width: 460px;
     display: flex;
-    align-items: flex-end;
-    gap: 16px;
-    border-bottom: 2px solid var(--white);
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 8px;
   }
   input {
-    flex: 1 1 auto;
-    min-width: 0;
-    min-height: 56px;
-    padding: 0;
+    flex: 1 1 220px;
+    min-height: 50px;
+    padding: 0 18px;
+    border-radius: 999px;
+    font-size: 16px;
+  }
+  .dark input {
+    border: 1px solid #52525b;
+    background: #27272a;
+    color: #fff;
+  }
+  .dark input::placeholder {
+    color: #a1a1aa;
+  }
+  .light input {
+    border: 1px solid #d4d4d8;
+    background: #fff;
+    color: var(--ink);
+  }
+  button {
+    min-height: 50px;
+    padding: 0 24px;
+    border-radius: 999px;
     border: 0;
-    background: transparent;
-    color: var(--white);
-    font-weight: 500;
-    font-size: 26px;
-    letter-spacing: -0.02em;
-    outline: none;
+    font-weight: 600;
+    font-size: 16px;
   }
-  input::placeholder {
-    color: #5e5e5a;
+  .dark button {
+    background: #fff;
+    color: var(--ink);
   }
-  .btn {
-    flex: 0 0 auto;
-    margin-bottom: 8px;
+  .light button {
+    background: var(--ink);
+    color: #fff;
   }
-  @media (max-width: 640px) {
-    .subscribe {
-      padding-bottom: 72px;
-    }
-    .body {
-      padding-top: 32px;
-    }
-    .pitch {
-      flex-basis: 100%;
-      font-size: 48px;
-    }
-    form {
-      flex-basis: 100%;
-    }
-    input {
-      font-size: 20px;
-    }
+  .dark :focus-visible {
+    outline-color: #fff;
   }
 </style>

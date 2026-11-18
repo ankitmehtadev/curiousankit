@@ -3,5 +3,7 @@
   "compatibility_date": "2026-10-04",
   "assets": {
     "directory": "./dist"
-  }
+  },
+  // Lets branch builds publish a preview link (npx wrangler preview).
+  "previews": {}
 }

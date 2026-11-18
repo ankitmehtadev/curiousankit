@@ -1,5 +1,5 @@
 ---
-// A level heading for rabbit holes. The depth meter picks these up by itself.
+// A section heading with a small numbered label above it.
 //   <Level n={1} title="The obvious answer" />
 //   <Level n={2} title="What the research says" />
 //   <Level n={3} title="The real reason" />
@@ -26,14 +26,9 @@ const { n, title, label = NAMES[n], short = SHORT[n] } = Astro.props;
     margin-bottom: 10px;
     font-family: var(--mono);
     font-weight: 500;
-    font-size: 13px;
-    letter-spacing: 0;
-    color: var(--red);
-  }
-  @media (max-width: 640px) {
-    .level-label {
-      font-size: 11px;
-      margin-bottom: 8px;
-    }
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent-text);
   }
 </style>

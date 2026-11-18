@@ -1,38 +1,51 @@
-import type { CollectionEntry } from 'astro:content';
+import { getCollection, type CollectionEntry } from 'astro:content';
 
-export type Note = CollectionEntry<'blog'>;
+export type Post = CollectionEntry<'blog'>;
 
-export function sortNotes(notes: Note[]): Note[] {
-  return [...notes].sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+export const isWhy = (p: Post) => p.data.type === 'Everyday Why';
+export const isDive = (p: Post) => p.data.type === 'Deep Dive';
+
+export function sortPosts(posts: Post[]): Post[] {
+  return [...posts].sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 }
 
-export const isExperiment = (n: Note) => n.data.stream === 'AI Journey' && n.data.format === 'Experiment';
-export const isAINote = (n: Note) => n.data.stream === 'AI Journey' && n.data.format !== 'Experiment';
-export const isRabbit = (n: Note) => n.data.stream === 'Rabbit Holes';
+// All published posts of one kind, newest first.
+export async function getWhys(): Promise<Post[]> {
+  return sortPosts((await getCollection('blog')).filter(isWhy));
+}
+export async function getDives(): Promise<Post[]> {
+  return sortPosts((await getCollection('blog')).filter(isDive));
+}
 
 // Addresses:
-//   AI notes        /notes/<slug>/
-//   AI experiments  /experiments/<slug>/
-//   Rabbit holes    /rabbit-holes/<slug>/
-export function sectionOf(n: Note): 'notes' | 'experiments' | 'rabbit-holes' {
-  if (isRabbit(n)) return 'rabbit-holes';
-  return isExperiment(n) ? 'experiments' : 'notes';
+//   Everyday Whys  /everyday-whys/<slug>/
+//   Deep Dives     /deep-dives/<slug>/
+export function sectionOf(p: Post): 'everyday-whys' | 'deep-dives' {
+  return isWhy(p) ? 'everyday-whys' : 'deep-dives';
+}
+export function postUrl(p: Post): string {
+  return `/${sectionOf(p)}/${p.id}/`;
 }
 
-export function noteUrl(n: Note): string {
-  return `/${sectionOf(n)}/${n.id}/`;
+// ISO week number of a date (weeks start on Monday).
+export function isoWeek(date: Date): number {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const day = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil(((d.valueOf() - yearStart.valueOf()) / 86400000 + 1) / 7);
 }
 
-// Exp. 001
-export function expLabel(n?: number): string {
-  return `Exp. ${String(n ?? 0).padStart(3, '0')}`;
+export function weekOf(p: Post): number {
+  return p.data.week ?? isoWeek(p.data.pubDate);
 }
 
-// The small label used in lists: "Note", "Exp. 001 · Done", "Mind"
-export function kindLabel(n: Note): string {
-  if (isRabbit(n)) return n.data.topic;
-  if (isExperiment(n)) return `${expLabel(n.data.exp)}${n.data.status ? ' · ' + n.data.status : ''}`;
-  return 'Note';
+// "Deep Dive · Money · Experiment"
+export function kickerOf(p: Post): string {
+  if (isWhy(p)) return `Everyday Whys · Week ${weekOf(p)}`;
+  return ['Deep Dive', p.data.topic, p.data.format === 'Experiment' ? 'Experiment' : '']
+    .filter(Boolean)
+    .join(' · ');
 }
 
 export function readingTime(body = ''): number {
@@ -40,13 +53,15 @@ export function readingTime(body = ''): number {
   return Math.max(1, Math.round(words / 220));
 }
 
-// 4 Oct 2026
-export function formatDate(date: Date, withYear = true): string {
-  return date.toLocaleDateString('en-AU', {
-    day: 'numeric',
-    month: 'short',
-    ...(withYear ? { year: 'numeric' } : {}),
-  }).replace('Sept', 'Sep');
+// 21/11/2026
+export function formatDate(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()}`;
+}
+
+// November 2026
+export function monthLabel(date: Date): string {
+  return date.toLocaleDateString('en-AU', { month: 'long', year: 'numeric' });
 }
 
 // 2026-10-19, using the same calendar day the post shows (not shifted to UTC).
